@@ -1,5 +1,5 @@
+/* eslint-disable-next-line no-console */
 console.log(`Running on NodeJS version ${process.version}`)
-process.on('exit', () => console.log(`Running on NodeJS version ${process.version}`))
 
 /* Always use "chai as promised" */
 import chai from 'chai'

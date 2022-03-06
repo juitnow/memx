@@ -1,4 +1,3 @@
-import 'chai-as-promised'
 import { expect } from 'chai'
 import { connection, constants } from '../src/index'
 

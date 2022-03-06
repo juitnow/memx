@@ -23,25 +23,29 @@ describe('Simple Client', () => {
     it('should set and get a value', async () => {
       const set = await client.set(key, value)
       expect(set).to.eql({
-        key,
-        value,
         flags: 0,
         cas: set!.cas,
       })
 
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
     })
 
     it('should set and get a value with flags', async () => {
       const set = await client.set(key, value, { flags: 12345 })
       expect(set).to.eql({
-        key,
-        value,
         flags: 12345,
         cas: set!.cas,
       })
 
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 12345,
+        cas: set!.cas,
+      })
     })
 
     it('should set a value with ttl and get it back', async function() {
@@ -50,13 +54,15 @@ describe('Simple Client', () => {
 
       const set = await client.set(key, value, { ttl: 1 })
       expect(set).to.eql({
-        key,
-        value,
         flags: 0,
         cas: set!.cas,
       })
 
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
@@ -66,29 +72,37 @@ describe('Simple Client', () => {
     it('should set and get a value with cas', async function() {
       const set = await client.set(key, value)
       expect(set).to.eql({
-        key,
+        flags: 0,
+        cas: set!.cas,
+      })
+
+      expect(await client.get(key)).excluding('recycle').to.eql({
         value,
         flags: 0,
         cas: set!.cas,
       })
 
-      expect(await client.get(key)).to.eql(set)
-
       const value2 = randomBytes(32)
       const set2 = await client.set(key, value2, { cas: set!.cas })
       expect(set2).to.eql({
-        key,
+        flags: 0,
+        cas: set2!.cas,
+      })
+
+      expect(await client.get(key)).excluding('recycle').to.eql({
         value: value2,
         flags: 0,
         cas: set2!.cas,
       })
 
-      expect(await client.get(key)).to.eql(set2)
-
       const value3 = randomBytes(32)
       expect(await client.set(key, value3, { cas: set!.cas })).to.be.undefined
 
-      expect(await client.get(key)).to.eql(set2)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value: value2,
+        flags: 0,
+        cas: set2!.cas,
+      })
     })
 
     it('should get a value and change its ttl', async function() {
@@ -99,14 +113,20 @@ describe('Simple Client', () => {
 
       const set = await client.set(key, value)
       expect(set).to.eql({
-        key,
-        value,
         flags: 0,
         cas: set!.cas,
       })
 
-      expect(await client.get(key, { ttl: 1 })).to.eql(set)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key, { ttl: 1 })).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       await new Promise((resolve) => setTimeout(resolve, 2000))
       expect(await client.get(key)).to.be.undefined
@@ -120,14 +140,16 @@ describe('Simple Client', () => {
 
       const set = await client.set(key, value)
       expect(set).to.eql({
-        key,
-        value,
         flags: 0,
         cas: set!.cas,
       })
 
       expect(await client.touch(key, { ttl: 1 })).to.eql(true)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       await new Promise((resolve) => setTimeout(resolve, 2000))
       expect(await client.get(key)).to.be.undefined
@@ -140,18 +162,21 @@ describe('Simple Client', () => {
     it('should add a value when none exists', async () => {
       const add = await client.add(key, value)
       expect(add).to.eql({
-        key,
+        flags: 0,
+        cas: add!.cas,
+      })
+
+      const get = await client.get(key)
+      expect(get).excluding('recycle').to.eql({
         value,
         flags: 0,
         cas: add!.cas,
       })
 
-      expect(await client.get(key)).to.eql(add)
-
       const value2 = randomBytes(32)
       expect(await client.add(key, value2)).to.be.undefined
 
-      expect(await client.get(key)).to.eql(add)
+      expect(await client.get(key)).excluding('recycle').to.eql(get)
     })
 
     it('should replace a value when none exists', async () => {
@@ -160,24 +185,28 @@ describe('Simple Client', () => {
 
       const set = await client.set(key, value)
       expect(set).to.eql({
-        key,
+        flags: 0,
+        cas: set!.cas,
+      })
+
+      expect(await client.get(key)).excluding('recycle').to.eql({
         value,
         flags: 0,
         cas: set!.cas,
       })
 
-      expect(await client.get(key)).to.eql(set)
-
       const value2 = randomBytes(32)
       const replace = await client.replace(key, value2)
       expect(replace).to.eql({
-        key,
-        value: value2,
         flags: 0,
         cas: replace!.cas,
       })
 
-      expect(await client.get(key)).to.eql(replace)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value: value2,
+        flags: 0,
+        cas: replace!.cas,
+      })
     })
   })
 
@@ -188,7 +217,11 @@ describe('Simple Client', () => {
       expect(await client.append(key, value)).to.be.false
 
       const set = await client.set(key, value)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       const value2 = randomBytes(32)
       expect(await client.append(key, value2)).to.be.true
@@ -199,11 +232,19 @@ describe('Simple Client', () => {
 
     it('should append a value with cas', async () => {
       const set = await client.set(key, value)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       const value2 = randomBytes(32)
       expect(await client.append(key, value2, { cas: set!.cas + 10n })).to.be.false
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       expect(await client.append(key, value2, { cas: set!.cas })).to.be.true
 
@@ -215,7 +256,11 @@ describe('Simple Client', () => {
       expect(await client.prepend(key, value)).to.be.false
 
       const set = await client.set(key, value)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       const value2 = randomBytes(32)
       expect(await client.prepend(key, value2)).to.be.true
@@ -226,11 +271,19 @@ describe('Simple Client', () => {
 
     it('should prepend a value with cas', async () => {
       const set = await client.set(key, value)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       const value2 = randomBytes(32)
       expect(await client.prepend(key, value2, { cas: set!.cas + 10n })).to.be.false
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       expect(await client.prepend(key, value2, { cas: set!.cas })).to.be.true
 
@@ -300,7 +353,6 @@ describe('Simple Client', () => {
 
       const ctr = await(client.increment(key, 1, { ttl: 1 }))
       expect(ctr).to.eql({
-        key,
         value: 0n,
         cas: ctr!.cas,
       })
@@ -317,7 +369,11 @@ describe('Simple Client', () => {
   describe('delete/flush', () => {
     it('should delete an existing value', async () => {
       const set = await client.set(key, value)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       expect(await client.delete(key)).to.be.true
       expect(await client.get(key)).to.be.undefined
@@ -327,10 +383,18 @@ describe('Simple Client', () => {
 
     it('should delete a value with cas', async () => {
       const set = await client.set(key, value)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       expect(await client.delete(key, { cas: set!.cas + 10n })).to.be.false
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       expect(await client.delete(key, { cas: set!.cas })).to.be.true
       expect(await client.get(key)).to.be.undefined
@@ -340,7 +404,11 @@ describe('Simple Client', () => {
 
     it('should flush caches immediately', async () => {
       const set = await client.set(key, value)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       expect(await client.flush())
       expect(await client.get(key)).to.be.undefined
@@ -351,10 +419,18 @@ describe('Simple Client', () => {
       this.slow(4000)
 
       const set = await client.set(key, value)
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       expect(await client.flush(2)) // 1 seconds doesn't work?
-      expect(await client.get(key)).to.eql(set)
+      expect(await client.get(key)).excluding('recycle').to.eql({
+        value,
+        flags: 0,
+        cas: set!.cas,
+      })
 
       await new Promise((resolve) => setTimeout(resolve, 3000))
       expect(await client.get(key)).to.be.undefined
