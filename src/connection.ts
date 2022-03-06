@@ -37,6 +37,10 @@ class Deferred {
   }
 }
 
+const finalizationRegistry = new FinalizationRegistry<Socket>((socket) => {
+  if (! socket.destroyed) socket.destroy()
+})
+
 export interface ConnectionOptions {
   host: string,
   port: number,
@@ -83,10 +87,16 @@ export class Connection {
       })
 
       socket.on('timeout', () => socket.destroy(new Error('Timeout')))
-      socket.on('close', () => this.#socket = undefined)
       socket.on('error', reject)
 
+      socket.on('close', () => {
+        finalizationRegistry.register(this, socket, this)
+        this.#socket = undefined
+      })
+
       socket.on('connect', () => {
+        finalizationRegistry.register(this, socket, this)
+
         socket.off('error', reject)
         socket.on('error', (error) => {
           for (const deferred of this.#defers.values()) {
