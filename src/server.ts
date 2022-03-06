@@ -1,4 +1,4 @@
-import { Adapter, Counter, Result } from './adapter'
+import { Adapter, Counter, GetResult, SetResult } from './adapter'
 import { Connection, ConnectionOptions } from './connection'
 import { OPCODE, STATUS } from './constants'
 import { RawIncomingPacket } from './decode'
@@ -23,6 +23,8 @@ export interface ServerOptions extends ConnectionOptions {
 }
 
 export class Server implements Adapter {
+  #buffer = Buffer.alloc(271) //  the maximum length
+
   #connection!: Connection
   #ttl!: number
 
@@ -40,7 +42,7 @@ export class Server implements Adapter {
   async get(
     key: string,
     options: { ttl?: number } = {},
-  ): Promise<Result | void> {
+  ): Promise<GetResult | void> {
     const { ttl } = options
 
     const hash = hashCode(key)
@@ -52,19 +54,23 @@ export class Server implements Adapter {
       extras.writeUInt32BE(ttl)
     }
 
+    const keyLength = this.#buffer.write(key, 'utf-8')
+
     const [ response ] = await this.#connection.send({
       opcode: ttl ? OPCODE.GAT : OPCODE.GET,
-      key: Buffer.from(key, 'utf-8'),
+      key: this.#buffer, // Buffer.from(key, 'utf-8'),
+      keyOffset: 0,
+      keyLength: keyLength,
       extras,
     })
 
     switch (response.status) {
       case STATUS.OK:
         return {
-          key,
           value: response.value,
           flags: response.extras.readUInt32BE(),
           cas: response.cas,
+          recycle: () => response.recycle(),
         }
       case STATUS.KEY_NOT_FOUND:
         return
@@ -105,26 +111,30 @@ export class Server implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<Result | void> {
+  ): Promise<SetResult | void> {
     const { flags = 0, cas = 0n, ttl = this.#ttl } = options
 
-    const extras = Buffer.alloc(8)
-    extras.writeUInt32BE(flags, 0)
-    extras.writeUInt32BE(ttl, 4)
+    this.#buffer.writeUInt32BE(flags, 0)
+    this.#buffer.writeUInt32BE(ttl, 4)
+
+    const keyLength = this.#buffer.write(key, 8, 251, 'utf-8')
+    if (keyLength > 250) throw new Error('Key too long')
 
     const [ response ] = await this.#connection.send({
       opcode: opcode,
-      key: Buffer.from(key, 'utf-8'),
-      value,
       cas,
-      extras,
+      extras: this.#buffer,
+      extrasOffset: 0,
+      extrasLength: 8,
+      key: this.#buffer,
+      keyOffset: 8,
+      keyLength: keyLength,
+      value,
     })
 
     switch (response.status) {
       case STATUS.OK:
         return {
-          key,
-          value,
           flags,
           cas: response.cas,
         }
@@ -140,7 +150,7 @@ export class Server implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number } = {},
-  ): Promise<Result | void> {
+  ): Promise<SetResult | void> {
     return this.#sar(OPCODE.SET, key, value, options)
   }
 
@@ -148,7 +158,7 @@ export class Server implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number } = {},
-  ): Promise<Result | void> {
+  ): Promise<SetResult | void> {
     return this.#sar(OPCODE.ADD, key, value, options)
   }
 
@@ -156,7 +166,7 @@ export class Server implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number } = {},
-  ): Promise<Result | void> {
+  ): Promise<SetResult | void> {
     return this.#sar(OPCODE.REPLACE, key, value, options)
   }
 
@@ -206,7 +216,7 @@ export class Server implements Adapter {
 
   /* ======================================================================== */
 
-  async #crement(
+  async #counter(
     opcode: OPCODE.INCREMENT | OPCODE.DECREMENT,
     key: string,
     delta: bigint | number,
@@ -234,7 +244,6 @@ export class Server implements Adapter {
     switch (response.status) {
       case STATUS.OK:
         return {
-          key: key,
           value: response.value.readBigInt64BE(0),
           cas: response.cas,
         }
@@ -251,7 +260,7 @@ export class Server implements Adapter {
     delta: bigint | number = 1,
     options: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean } = {},
   ): Promise<Counter | void> {
-    return this.#crement(OPCODE.INCREMENT, key, delta, options)
+    return this.#counter(OPCODE.INCREMENT, key, delta, options)
   }
 
   decrement(
@@ -259,7 +268,7 @@ export class Server implements Adapter {
     delta: bigint | number = 1,
     options: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean } = {},
   ): Promise<Counter | void> {
-    return this.#crement(OPCODE.DECREMENT, key, delta, options)
+    return this.#counter(OPCODE.DECREMENT, key, delta, options)
   }
 
   /* ======================================================================== */
@@ -349,11 +358,11 @@ export class Server implements Adapter {
   }
 
   async stats(): Promise<Record<string, string>> {
-    const response = await this.#connection.send({
+    const responses = await this.#connection.send({
       opcode: OPCODE.STAT,
     })
 
-    return response.reduce((result, packet) => {
+    return responses.reduce((result, packet) => {
       if (packet.status === STATUS.OK) {
         const key = packet.key.toString('utf-8')
         const value = packet.value.toString('utf-8')
