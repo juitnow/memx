@@ -1,6 +1,7 @@
 import { EventEmitter } from 'stream'
 
 export class FakeSocket extends EventEmitter {
+  destroyed = true
   options: any
   isref = true
 
@@ -8,6 +9,8 @@ export class FakeSocket extends EventEmitter {
     super()
     this.options = options
     this.on('error', () => process.nextTick(() => this.emit('close', true)))
+    this.on('connect', () => this.destroyed = false)
+    this.on('closed', () => this.destroyed = true)
     process.nextTick(() => {
       connect == 'timeout' ? this.emit('timeout') :
       connect ? this.emit('connect') :
