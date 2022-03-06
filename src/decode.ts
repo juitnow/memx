@@ -24,7 +24,7 @@ export interface RawIncomingPacket {
 
 export class Decoder {
   #consumer: (packet: RawIncomingPacket) => void
-  #header = Buffer.alloc(24)
+  #header = Buffer.allocUnsafe(24)
   #body?: Buffer
   #pos = 0
 
@@ -48,7 +48,7 @@ export class Decoder {
 
       const bodyLength = this.#header.readUInt32BE(OFFSETS.BODY_LENGTH_$32)
       if (bodyLength) {
-        const body = this.#body || (this.#body = Buffer.alloc(bodyLength))
+        const body = this.#body || (this.#body = Buffer.allocUnsafe(bodyLength))
 
         const copied = buffer.copy(body, this.#pos - 24, start, end)
         this.#pos += copied
@@ -58,10 +58,11 @@ export class Decoder {
 
         const keyLength = this.#header.readUInt16BE(OFFSETS.KEY_LENGTH_$16)
         const extrasLength = this.#header.readUInt8(OFFSETS.EXTRAS_LENGTH_$8)
+        const valueLength = bodyLength - keyLength - extrasLength
 
-        key = body.subarray(extrasLength, extrasLength + keyLength)
-        value = body.subarray(extrasLength + keyLength)
-        extras = body.subarray(0, extrasLength)
+        key = keyLength ? body.subarray(extrasLength, extrasLength + keyLength) : EMPTY_BUFFER
+        value = valueLength ? body.subarray(extrasLength + keyLength) : EMPTY_BUFFER
+        extras = extrasLength ? body.subarray(0, extrasLength) : EMPTY_BUFFER
       } else {
         extras = key = value = EMPTY_BUFFER
       }
