@@ -1,16 +1,16 @@
 export interface SetResult {
-  key: string,
-  value: Buffer
   flags: number,
   cas: bigint
 }
 
-export interface GetResult extends SetResult {
+export interface GetResult {
   value: Buffer
+  flags: number,
+  cas: bigint
+  recycle: () => void
 }
 
 export interface Counter {
-  key: string,
   value: bigint,
   cas: bigint
 }
