@@ -284,6 +284,16 @@ describe('Simple Client', () => {
       expect(dec!.value).to.equal(20n)
     })
 
+    it('should fail when trying to use a string as a counter', async () => {
+      await(client.set(key, Buffer.from('foobar')))
+
+      await expect(client.increment(key, 1))
+          .to.be.rejectedWith(Error, `(status=NON_NUMERIC_VALUE, key=${key})`)
+
+      await expect(client.decrement(key, 1))
+          .to.be.rejectedWith(Error, `(status=NON_NUMERIC_VALUE, key=${key})`)
+    })
+
     it('should create a counter with a ttl', async function() {
       this.timeout(10000)
       this.slow(3000)
