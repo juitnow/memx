@@ -1,8 +1,12 @@
-export interface Result {
+export interface SetResult {
   key: string,
-  value: Buffer,
+  value: Buffer
   flags: number,
   cas: bigint
+}
+
+export interface GetResult extends SetResult {
+  value: Buffer
 }
 
 export interface Counter {
@@ -15,7 +19,7 @@ export interface Adapter {
   get(
     key: string,
     options?: { ttl?: number },
-  ): Promise<Result | void>
+  ): Promise<GetResult | void>
 
   touch(
     key: string,
@@ -26,19 +30,19 @@ export interface Adapter {
     key: string,
     value: Buffer,
     options?: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<Result | void>
+  ): Promise<SetResult | void>
 
   add(
     key: string,
     value: Buffer,
     options?: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<Result | void>
+  ): Promise<SetResult | void>
 
   replace(
     key: string,
     value: Buffer,
     options?: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<Result | void>
+  ): Promise<SetResult | void>
 
   append(
     key: string,
