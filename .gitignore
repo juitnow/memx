@@ -1,0 +1,8 @@
+*.d.ts
+*.tgz
+.nyc_output/
+.vscode/
+build/
+coverage/
+dist/
+node_modules/
