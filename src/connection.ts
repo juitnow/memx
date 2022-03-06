@@ -2,7 +2,7 @@ import net, { Socket } from 'net'
 
 import { Encoder, RawOutgoingPacket } from './encode'
 import { Decoder, RawIncomingPacket } from './decode'
-import { OPCODE } from './constants'
+import { BUFFERS, OPCODE } from './constants'
 
 type RawIncomingPackets = [ RawIncomingPacket, ...RawIncomingPacket[] ]
 
@@ -52,8 +52,10 @@ export class Connection {
   readonly #decoder = new Decoder((packet) => this.#receive(packet))
   readonly #encoder = new Encoder()
 
+  readonly #socketBuffer = Buffer.allocUnsafeSlow(BUFFERS.BUFFER_SIZE)
+  readonly #decodeBuffer = Buffer.allocUnsafeSlow(BUFFERS.BUFFER_SIZE)
+
   readonly #defers = new Map<number, Deferred>()
-  readonly #buffer = Buffer.allocUnsafeSlow(16 * 1024)
   readonly #factory: typeof net.connect
   readonly #timeout: number
 
@@ -78,7 +80,7 @@ export class Connection {
         port: this.port,
         timeout: this.#timeout,
         onread: {
-          buffer: this.#buffer,
+          buffer: this.#socketBuffer,
           callback: (bytes: number, buffer: Buffer): boolean => {
             this.#decoder.append(buffer, 0, bytes)
             return true
@@ -134,7 +136,7 @@ export class Connection {
 
   async send(packet: RawOutgoingPacket): Promise<RawIncomingPackets> {
     const sequence = ++ this.#sequence
-    const buffer = this.#encoder.encode(packet, sequence)
+    const buffer = this.#encoder.encode(this.#decodeBuffer, packet, sequence)
     const deferred = new Deferred(packet.opcode)
 
     this.#defers.set(sequence, deferred)

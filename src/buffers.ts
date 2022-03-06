@@ -1,9 +1,6 @@
-enum CONSTANTS {
-  POOL_SIZE = 64,
-  BUFFER_SIZE = 8192,
-}
+import { BUFFERS } from './constants'
 
-const pool: Buffer[] = new Array(CONSTANTS.POOL_SIZE)
+const pool: Buffer[] = new Array(BUFFERS.POOL_SIZE)
 let recycles = 0
 let offset = -1
 
@@ -17,17 +14,17 @@ export interface RecyclableBuffer extends Buffer {
 }
 
 export function allocateBuffer(size: number): RecyclableBuffer {
-  if (size > CONSTANTS.BUFFER_SIZE) {
+  if (size > BUFFERS.BUFFER_SIZE) {
     const buffer = Buffer.allocUnsafeSlow(size) as RecyclableBuffer
     buffer.recycle = () => void 0
     return buffer
   }
 
-  const buffer = offset >= 0 ? pool[offset--] : Buffer.allocUnsafeSlow(CONSTANTS.BUFFER_SIZE)
+  const buffer = offset >= 0 ? pool[offset--] : Buffer.allocUnsafeSlow(BUFFERS.BUFFER_SIZE)
   const recyclable = buffer.subarray(0, size) as RecyclableBuffer
   let recycled = false
   recyclable.recycle = (): void => queueMicrotask(() => {
-    if ((offset >= CONSTANTS.POOL_SIZE) || recycled) return
+    if ((offset >= BUFFERS.POOL_SIZE) || recycled) return
     pool[++offset] = buffer
     recycles ++
     recycled = true

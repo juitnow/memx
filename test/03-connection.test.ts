@@ -23,7 +23,7 @@ describe('Connection', () => {
       expect(options.host).to.equal(host)
       expect(options.port).to.equal(port)
       expect(options.timeout).to.equal(1234)
-      expect(options.onread.buffer).to.be.instanceof(Buffer).with.property('length', 16384)
+      expect(options.onread.buffer).to.be.instanceof(Buffer).with.property('length', 8192)
       expect(options.onread.callback).to.be.a('function')
 
       return new class extends FakeSocket {

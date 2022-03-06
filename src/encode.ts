@@ -12,10 +12,8 @@ import { DATA_TYPE, EMPTY_BUFFER, MAGIC, VBUCKET, OPCODE, OFFSETS } from './cons
 // header.writeBigUInt64BE (cas,          16)
 
 // keep as an "enum", the compiler will replace with values
-enum SIZES {
-  BUFFER_SIZE = 16384, // normal buffer size
+enum CONSTANTS {
   HEADER_SIZE = 24, // header size
-  BODY_SIZE = 16360, // body size: buffer - header
 }
 
 export interface RawOutgoingPacket {
@@ -37,9 +35,7 @@ export interface RawOutgoingPacket {
 }
 
 export class Encoder {
-  readonly #buffer = Buffer.allocUnsafe(SIZES.BUFFER_SIZE)
-
-  encode(packet: RawOutgoingPacket, seq: number = 0): Buffer {
+  encode(buffer: Buffer, packet: RawOutgoingPacket, seq: number = 0): Buffer {
     const {
       opcode,
       sequence = seq,
@@ -58,13 +54,10 @@ export class Encoder {
       valueLength = value.length,
     } = packet
 
-    // console.log('-->', extrasOffset, extrasLength)
-
     const bodyLength = extrasLength + keyLength + valueLength
-    const length = bodyLength + SIZES.HEADER_SIZE
+    const length = bodyLength + CONSTANTS.HEADER_SIZE
 
-    const buffer = bodyLength <= SIZES.BODY_SIZE ? this.#buffer :
-        Buffer.allocUnsafe(SIZES.HEADER_SIZE + bodyLength)
+    buffer = length <= buffer.length ? buffer : Buffer.allocUnsafe(length)
 
     buffer.writeUInt8(MAGIC.REQUEST, OFFSETS.MAGIC_$8)
     buffer.writeUInt8(opcode, OFFSETS.OPCODE_$8)
