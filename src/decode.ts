@@ -1,5 +1,6 @@
 import { DATA_TYPE, EMPTY_BUFFER, MAGIC, OFFSETS } from './constants'
 import assert from 'assert'
+import { allocateBuffer, RecyclableBuffer } from './buffers'
 
 // Reading the full header would be like
 // const magic =         header.readUInt8        (0)
@@ -20,12 +21,53 @@ export interface RawIncomingPacket {
   readonly extras: Buffer
   readonly key: Buffer
   readonly value: Buffer
+  recycle: () => void
+}
+
+class RawIncomingPacketImpl implements RawIncomingPacket {
+  #body?: RecyclableBuffer
+
+  readonly opcode: number
+  readonly status: number
+  readonly sequence: number
+  readonly cas: bigint
+  readonly extras: Buffer
+  readonly key: Buffer
+  readonly value: Buffer
+
+  constructor(header: Buffer, body?: RecyclableBuffer) {
+    this.opcode = header.readUInt8(OFFSETS.OPCODE_$8)
+    this.status = header.readUInt16BE(OFFSETS.STATUS_$16)
+    this.sequence = header.readUInt32BE(OFFSETS.SEQUENCE_$32)
+    this.cas = header.readBigUInt64BE(OFFSETS.CAS_$64)
+
+    if (body) {
+      const bodyLength = header.readUInt32BE(OFFSETS.BODY_LENGTH_$32)
+      const keyLength = header.readUInt16BE(OFFSETS.KEY_LENGTH_$16)
+      const extrasLength = header.readUInt8(OFFSETS.EXTRAS_LENGTH_$8)
+      const valueLength = bodyLength - keyLength - extrasLength
+
+      this.key = keyLength ? body.subarray(extrasLength, extrasLength + keyLength) : EMPTY_BUFFER
+      this.value = valueLength ? body.subarray(extrasLength + keyLength) : EMPTY_BUFFER
+      this.extras = extrasLength ? body.subarray(0, extrasLength) : EMPTY_BUFFER
+
+      this.#body = body
+    } else {
+      this.extras = EMPTY_BUFFER
+      this.key = EMPTY_BUFFER
+      this.value = EMPTY_BUFFER
+    }
+  }
+
+  recycle(): void {
+    this.#body?.recycle()
+  }
 }
 
 export class Decoder {
   #consumer: (packet: RawIncomingPacket) => void
-  #header = Buffer.allocUnsafe(24)
-  #body?: Buffer
+  #header = Buffer.allocUnsafeSlow(24)
+  #body?: RecyclableBuffer
   #pos = 0
 
   constructor(consumer: (packet: RawIncomingPacket) => void) {
@@ -33,22 +75,22 @@ export class Decoder {
   }
 
   append(buffer: Buffer, start: number, end: number): void {
+    const header = this.#header
+
     while (start < end) {
       if (this.#pos < 24) {
-        const copied = buffer.copy(this.#header, this.#pos, start, end)
+        const copied = buffer.copy(header, this.#pos, start, end)
         this.#pos += copied
         start += copied
       }
 
       if (this.#pos < 24) return
 
-      let key: Buffer
-      let value: Buffer
-      let extras: Buffer
+      let packet: RawIncomingPacketImpl
 
-      const bodyLength = this.#header.readUInt32BE(OFFSETS.BODY_LENGTH_$32)
+      const bodyLength = header.readUInt32BE(OFFSETS.BODY_LENGTH_$32)
       if (bodyLength) {
-        const body = this.#body || (this.#body = Buffer.allocUnsafe(bodyLength))
+        const body = this.#body || (this.#body = allocateBuffer(bodyLength))
 
         const copied = buffer.copy(body, this.#pos - 24, start, end)
         this.#pos += copied
@@ -56,35 +98,18 @@ export class Decoder {
 
         if (this.#pos - 24 < body.length) return
 
-        const keyLength = this.#header.readUInt16BE(OFFSETS.KEY_LENGTH_$16)
-        const extrasLength = this.#header.readUInt8(OFFSETS.EXTRAS_LENGTH_$8)
-        const valueLength = bodyLength - keyLength - extrasLength
-
-        key = keyLength ? body.subarray(extrasLength, extrasLength + keyLength) : EMPTY_BUFFER
-        value = valueLength ? body.subarray(extrasLength + keyLength) : EMPTY_BUFFER
-        extras = extrasLength ? body.subarray(0, extrasLength) : EMPTY_BUFFER
+        packet = new RawIncomingPacketImpl(header, body)
       } else {
-        extras = key = value = EMPTY_BUFFER
+        packet = new RawIncomingPacketImpl(header)
       }
 
-      const magic = this.#header.readUInt8(OFFSETS.MAGIC_$8)
-      const dataType = this.#header.readUInt8(OFFSETS.DATA_TYPE_$8)
+      const magic = header.readUInt8(OFFSETS.MAGIC_$8)
+      const dataType = header.readUInt8(OFFSETS.DATA_TYPE_$8)
       assert.equal(magic, MAGIC.RESPONSE, 'Invalid magic in header')
       assert.equal(dataType, DATA_TYPE.RAW, 'Invalid data type in header')
 
-      const packet: RawIncomingPacket = {
-        opcode: this.#header.readUInt8(OFFSETS.OPCODE_$8),
-        status: this.#header.readUInt16BE(OFFSETS.STATUS_$16),
-        sequence: this.#header.readUInt32BE(OFFSETS.SEQUENCE_$32),
-        cas: this.#header.readBigUInt64BE(OFFSETS.CAS_$64),
-        key,
-        value,
-        extras,
-      }
-
-      this.#body = undefined
       this.#pos = 0
-
+      this.#body = undefined
       this.#consumer(packet)
     }
   }
