@@ -53,7 +53,7 @@ export class Connection {
   readonly #encoder = new Encoder()
 
   readonly #defers = new Map<number, Deferred>()
-  readonly #buffer = Buffer.alloc(16 * 1024)
+  readonly #buffer = Buffer.allocUnsafeSlow(16 * 1024)
   readonly #factory: typeof net.connect
   readonly #timeout: number
 
