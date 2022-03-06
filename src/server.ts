@@ -1,6 +1,4 @@
-// TOUCH = 0x1c,
-// GAT = 0x1d,
-
+import { Adapter, Counter, Result } from './adapter'
 import { Connection, ConnectionOptions } from './connection'
 import { OPCODE, STATUS } from './constants'
 import { RawIncomingPacket } from './decode'
@@ -11,24 +9,20 @@ function fail(packet: RawIncomingPacket, key?: string): never {
   throw new Error(`${message} (status=${status}${key ? `, key=${key}` : ''})`)
 }
 
-export interface Result {
-  key: string,
-  value: Buffer,
-  flags: number,
-  cas: bigint
-}
+function hashCode(key: string): number {
+  const length = key.length
+  let hash = 0
 
-export interface Counter {
-  key: string,
-  value: bigint,
-  cas: bigint
+  for (let i = 0; i < length; i ++) hash = hash * 31 + key.charCodeAt(i)
+
+  return hash
 }
 
 export interface ServerOptions extends ConnectionOptions {
   ttl?: number
 }
 
-export class Server {
+export class Server implements Adapter {
   #connection!: Connection
   #ttl!: number
 
@@ -48,6 +42,9 @@ export class Server {
     options: { ttl?: number } = {},
   ): Promise<Result | void> {
     const { ttl } = options
+
+    const hash = hashCode(key)
+    void hash
 
     let extras: Buffer | undefined
     if (ttl) {
