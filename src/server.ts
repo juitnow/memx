@@ -1,6 +1,6 @@
 import { Adapter, Counter, GetResult } from './adapter'
 import { Connection, ConnectionOptions } from './connection'
-import { OPCODE, STATUS } from './constants'
+import { BUFFERS, OPCODE, STATUS } from './constants'
 import { RawIncomingPacket } from './decode'
 
 function fail(packet: RawIncomingPacket, key?: string): never {
@@ -23,7 +23,7 @@ export interface ServerOptions extends ConnectionOptions {
 }
 
 export class Server implements Adapter {
-  #buffer = Buffer.alloc(271) //  the maximum length
+  #buffer = Buffer.alloc(BUFFERS.KEY_TOO_BIG + 20) // 20 is the max extras we'll write
 
   #connection!: Connection
   #ttl!: number
@@ -39,26 +39,32 @@ export class Server implements Adapter {
 
   /* ======================================================================== */
 
+  #writeKey(key: string, offset: number = 0): number {
+    const keyLength = this.#buffer.write(key, offset, BUFFERS.KEY_TOO_BIG, 'utf-8')
+    if (keyLength > BUFFERS.KEY_SIZE) throw new Error(`Key too long (len=${keyLength})`)
+    return keyLength
+  }
+
+  /* ======================================================================== */
+
   async get(
     key: string,
     options: { ttl?: number } = {},
   ): Promise<GetResult | void> {
     const { ttl } = options
 
-    let extras: Buffer | undefined
-    if (ttl) {
-      extras = Buffer.alloc(4)
-      extras.writeUInt32BE(ttl)
-    }
-
-    const keyLength = this.#buffer.write(key, 'utf-8')
+    let keyOffset = 0
+    if (ttl) keyOffset = this.#buffer.writeUInt32BE(ttl)
+    const keyLength = this.#writeKey(key, keyOffset)
 
     const [ response ] = await this.#connection.send({
       opcode: ttl ? OPCODE.GAT : OPCODE.GET,
-      key: this.#buffer, // Buffer.from(key, 'utf-8'),
-      keyOffset: 0,
-      keyLength: keyLength,
-      extras,
+      extras: this.#buffer,
+      extrasOffset: 0,
+      extrasLength: keyOffset,
+      key: this.#buffer,
+      keyOffset,
+      keyLength,
     })
 
     switch (response.status) {
@@ -82,22 +88,30 @@ export class Server implements Adapter {
   ): Promise<boolean> {
     const { ttl = this.#ttl } = options
 
-    const extras = Buffer.alloc(4)
-    extras.writeUInt32BE(ttl)
+    const keyOffset = this.#buffer.writeUInt32BE(ttl)
+    const keyLength = this.#writeKey(key, keyOffset)
 
     const [ response ] = await this.#connection.send({
       opcode: OPCODE.TOUCH,
-      key: Buffer.from(key, 'utf-8'),
-      extras,
+      extras: this.#buffer,
+      extrasOffset: 0,
+      extrasLength: keyOffset,
+      key: this.#buffer,
+      keyOffset,
+      keyLength,
     })
 
-    switch (response.status) {
-      case STATUS.OK:
-        return true
-      case STATUS.KEY_NOT_FOUND:
-        return false
-      default:
-        fail(response, key)
+    try {
+      switch (response.status) {
+        case STATUS.OK:
+          return true
+        case STATUS.KEY_NOT_FOUND:
+          return false
+        default:
+          fail(response, key)
+      }
+    } finally {
+      response.recycle()
     }
   }
 
@@ -111,34 +125,35 @@ export class Server implements Adapter {
   ): Promise<bigint | void> {
     const { flags = 0, cas = 0n, ttl = this.#ttl } = options
 
-    this.#buffer.writeUInt32BE(flags, 0)
-    this.#buffer.writeUInt32BE(ttl, 4)
-
-    const keyLength = this.#buffer.write(key, 8, 251, 'utf-8')
-    if (keyLength > 250) throw new Error('Key too long')
+    let keyOffset: number
+    keyOffset = this.#buffer.writeUInt32BE(flags)
+    keyOffset = this.#buffer.writeUInt32BE(ttl, keyOffset)
+    const keyLength = this.#writeKey(key, keyOffset)
 
     const [ response ] = await this.#connection.send({
       opcode: opcode,
       cas,
       extras: this.#buffer,
       extrasOffset: 0,
-      extrasLength: 8,
+      extrasLength: keyOffset,
       key: this.#buffer,
-      keyOffset: 8,
-      keyLength: keyLength,
+      keyOffset,
+      keyLength,
       value,
     })
 
-    response.recycle()
-
-    switch (response.status) {
-      case STATUS.OK:
-        return response.cas
-      case STATUS.KEY_NOT_FOUND:
-      case STATUS.KEY_EXISTS:
-        return
-      default:
-        fail(response, key)
+    try {
+      switch (response.status) {
+        case STATUS.OK:
+          return response.cas
+        case STATUS.KEY_NOT_FOUND:
+        case STATUS.KEY_EXISTS:
+          return
+        default:
+          fail(response, key)
+      }
+    } finally {
+      response.recycle()
     }
   }
 
@@ -176,21 +191,29 @@ export class Server implements Adapter {
   ): Promise<boolean> {
     const { cas = 0n } = options
 
+    const keyLength = this.#writeKey(key)
+
     const [ response ] = await this.#connection.send({
       opcode: opcode,
-      key: Buffer.from(key, 'utf-8'),
-      value,
       cas,
+      key: Buffer.from(key, 'utf-8'),
+      keyOffset: 0,
+      keyLength,
+      value,
     })
 
-    switch (response.status) {
-      case STATUS.OK:
-        return true
-      case STATUS.ITEM_NOT_STORED:
-      case STATUS.KEY_EXISTS:
-        return false
-      default:
-        fail(response, key)
+    try {
+      switch (response.status) {
+        case STATUS.OK:
+          return true
+        case STATUS.ITEM_NOT_STORED:
+        case STATUS.KEY_EXISTS:
+          return false
+        default:
+          fail(response, key)
+      }
+    } finally {
+      response.recycle()
     }
   }
 
@@ -225,29 +248,38 @@ export class Server implements Adapter {
       create = true,
     } = options
 
-    const extras = Buffer.alloc(20)
-    extras.writeBigInt64BE(BigInt(delta), 0)
-    extras.writeBigInt64BE(BigInt(initial), 8)
-    extras.writeUInt32BE(create ? ttl : 0xffffffff, 16)
+    let keyOffset: number
+    keyOffset = this.#buffer.writeBigInt64BE(BigInt(delta))
+    keyOffset = this.#buffer.writeBigInt64BE(BigInt(initial), keyOffset)
+    keyOffset = this.#buffer.writeUInt32BE(create ? ttl : 0xffffffff, keyOffset)
+    const keyLength = this.#writeKey(key, keyOffset)
 
     const [ response ] = await this.#connection.send({
       opcode: opcode,
-      key: Buffer.from(key, 'utf-8'),
-      extras,
+      extras: this.#buffer,
+      extrasOffset: 0,
+      extrasLength: keyOffset,
+      key: this.#buffer,
+      keyOffset,
+      keyLength,
       cas,
     })
 
-    switch (response.status) {
-      case STATUS.OK:
-        return {
-          value: response.value.readBigInt64BE(0),
-          cas: response.cas,
-        }
-      case STATUS.KEY_NOT_FOUND:
-      case STATUS.KEY_EXISTS:
-        return
-      default:
-        fail(response, key)
+    try {
+      switch (response.status) {
+        case STATUS.OK:
+          return {
+            value: response.value.readBigInt64BE(0),
+            cas: response.cas,
+          }
+        case STATUS.KEY_NOT_FOUND:
+        case STATUS.KEY_EXISTS:
+          return
+        default:
+          fail(response, key)
+      }
+    } finally {
+      response.recycle()
     }
   }
 
@@ -275,40 +307,50 @@ export class Server implements Adapter {
   ): Promise<boolean> {
     const { cas = 0n } = options
 
+    const keyLength = this.#writeKey(key)
+
     const [ response ] = await this.#connection.send({
       opcode: OPCODE.DELETE,
-      key: Buffer.from(key, 'utf-8'),
+      key: this.#buffer,
+      keyOffset: 0,
+      keyLength,
       cas,
     })
 
-    switch (response.status) {
-      case STATUS.OK:
-        return true
-      case STATUS.KEY_NOT_FOUND:
-      case STATUS.KEY_EXISTS:
-        return false
-      default:
-        fail(response, key)
+    try {
+      switch (response.status) {
+        case STATUS.OK:
+          return true
+        case STATUS.KEY_NOT_FOUND:
+        case STATUS.KEY_EXISTS:
+          return false
+        default:
+          fail(response, key)
+      }
+    } finally {
+      response.recycle()
     }
   }
 
   async flush(ttl: number = 0): Promise<void> {
-    let extras: Buffer | undefined
-    if (ttl > 0) {
-      extras = Buffer.alloc(4)
-      extras.writeUInt32BE(ttl)
-    }
+    const extrasLength = ttl ? this.#buffer.writeUInt32BE(ttl) : 0
 
     const [ response ] = await this.#connection.send({
       opcode: OPCODE.FLUSH,
-      extras,
+      extras: this.#buffer,
+      extrasOffset: 0,
+      extrasLength,
     })
 
-    switch (response.status) {
-      case STATUS.OK:
-        return
-      default:
-        fail(response)
+    try {
+      switch (response.status) {
+        case STATUS.OK:
+          return
+        default:
+          fail(response)
+      }
+    } finally {
+      response.recycle()
     }
   }
 
@@ -319,11 +361,15 @@ export class Server implements Adapter {
       opcode: OPCODE.NOOP,
     })
 
-    switch (response.status) {
-      case STATUS.OK:
-        return
-      default:
-        fail(response)
+    try {
+      switch (response.status) {
+        case STATUS.OK:
+          return
+        default:
+          fail(response)
+      }
+    } finally {
+      response.recycle()
     }
   }
 
@@ -332,11 +378,15 @@ export class Server implements Adapter {
       opcode: OPCODE.QUIT,
     })
 
-    switch (response.status) {
-      case STATUS.OK:
-        return
-      default:
-        fail(response)
+    try {
+      switch (response.status) {
+        case STATUS.OK:
+          return
+        default:
+          fail(response)
+      }
+    } finally {
+      response.recycle()
     }
   }
 
@@ -345,11 +395,15 @@ export class Server implements Adapter {
       opcode: OPCODE.VERSION,
     })
 
-    switch (response.status) {
-      case STATUS.OK:
-        return response.value.toString('utf-8')
-      default:
-        fail(response)
+    try {
+      switch (response.status) {
+        case STATUS.OK:
+          return response.value.toString('utf-8')
+        default:
+          fail(response)
+      }
+    } finally {
+      response.recycle()
     }
   }
 
@@ -359,14 +413,18 @@ export class Server implements Adapter {
     })
 
     return responses.reduce((result, packet) => {
-      if (packet.status === STATUS.OK) {
-        const key = packet.key.toString('utf-8')
-        const value = packet.value.toString('utf-8')
-        if (key && value) result[key] = value
-        return result
-      }
+      try {
+        if (packet.status === STATUS.OK) {
+          const key = packet.key.toString('utf-8')
+          const value = packet.value.toString('utf-8')
+          if (key && value) result[key] = value
+          return result
+        }
 
-      fail(packet)
+        fail(packet)
+      } finally {
+        packet.recycle()
+      }
     }, {} as Record<string, string>)
   }
 }

@@ -3,6 +3,9 @@ export const EMPTY_BUFFER = Buffer.alloc(0)
 export enum BUFFERS {
   POOL_SIZE = 64,
   BUFFER_SIZE = 8192,
+  HEADER_SIZE = 24,
+  KEY_SIZE = 250,
+  KEY_TOO_BIG = 251,
 }
 
 export enum OFFSETS {
