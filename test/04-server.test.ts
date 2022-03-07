@@ -4,7 +4,7 @@ import { ServerAdapter } from '../src/index'
 
 import { FakeSocket } from './fake-socket'
 
-describe('Simple Client', () => {
+describe('Server Adapter', () => {
   const host = process.env.MEMCACHED_HOST || '127.0.0.1'
   const port = parseInt(process.env.MEMCACHED_PORT || '11211')
   const client = new ServerAdapter({ host, port })
@@ -15,6 +15,26 @@ describe('Simple Client', () => {
   beforeEach(() => {
     key = randomBytes(30).toString('base64')
     value = randomBytes(64)
+  })
+
+  /* ======================================================================== */
+
+  describe('construction', () => {
+    it('should construct an instance', () => {
+      const s1 = new ServerAdapter({ host: 'foo' })
+      expect(s1).to.have.property('host', 'foo')
+      expect(s1).to.have.property('port', 11211)
+      expect(s1).to.have.property('timeout', 10)
+      expect(s1).to.have.property('ttl', 0)
+      expect(s1).to.have.property('id', 'foo:11211')
+
+      const s2 = new ServerAdapter({ host: 'bar', port: 12345, timeout: 99, ttl: 100 })
+      expect(s2).to.have.property('host', 'bar')
+      expect(s2).to.have.property('port', 12345)
+      expect(s2).to.have.property('timeout', 99)
+      expect(s2).to.have.property('ttl', 100)
+      expect(s1).to.have.property('id', 'bar:12345')
+    })
   })
 
   /* ======================================================================== */
@@ -513,10 +533,6 @@ describe('Simple Client', () => {
           }
         }(options)
       },
-    })
-
-    it('should get the server id', async () => {
-      await expect(client.id).to.equal('host:12345')
     })
 
     it('should fail on get', async () => {

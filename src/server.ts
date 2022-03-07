@@ -63,18 +63,39 @@ export class ServerAdapter implements Adapter {
   #connection!: Connection
   #ttl!: number
 
-  readonly id!: string
+  readonly #id!: string
 
   constructor(options: ServerOptions) {
     this.#connection = new Connection(options)
     this.#ttl = options.ttl || 0 // never
 
-    const id = `${this.#connection.host}:${this.#connection.port}`
-    Object.defineProperty(this, 'id', { value: id, enumerable: true, configurable: false })
+    this.#id = `${this.#connection.host}:${this.#connection.port}`
   }
+
+  /* ======================================================================== */
 
   get connected(): boolean {
     return this.#connection.connected
+  }
+
+  get host(): string {
+    return this.#connection.host
+  }
+
+  get port(): number {
+    return this.#connection.port
+  }
+
+  get timeout(): number {
+    return this.#connection.timeout
+  }
+
+  get ttl(): number {
+    return this.#ttl
+  }
+
+  get id(): string {
+    return this.#id
   }
 
   /* ======================================================================== */
@@ -438,7 +459,7 @@ export class ServerAdapter implements Adapter {
     try {
       switch (response.status) {
         case STATUS.OK:
-          return { [this.id]: response.value.toString('utf-8') }
+          return { [this.#id]: response.value.toString('utf-8') }
         default:
           fail(response)
       }
@@ -465,6 +486,6 @@ export class ServerAdapter implements Adapter {
       }
     }, {})
 
-    return { [this.id]: stats as Stats }
+    return { [this.#id]: stats as Stats }
   }
 }
