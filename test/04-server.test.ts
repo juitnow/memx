@@ -1,13 +1,13 @@
 import { expect } from 'chai'
 import { randomBytes } from 'crypto'
-import { Server } from '../src/index'
+import { ServerAdapter } from '../src/index'
 
 import { FakeSocket } from './fake-socket'
 
 describe('Simple Client', () => {
   const host = process.env.MEMCACHED_HOST || '127.0.0.1'
   const port = parseInt(process.env.MEMCACHED_PORT || '11211')
-  const client = new Server({ host, port })
+  const client = new ServerAdapter({ host, port })
 
   let key: string
   let value: Buffer
@@ -475,20 +475,28 @@ describe('Simple Client', () => {
     })
 
     it('should get the version', async () => {
-      expect(await client.version()).to.match(/^\d+\.\d+\.\d+$/)
+      const version = await client.version()
+      expect(version[client.id]).to.match(/^\d+\.\d+\.\d+$/)
     })
 
     it('should get the stats', async () => {
       const stats = await client.stats()
-      const version = await client.version()
-      expect(stats).to.be.an('object').property('version').equal(version)
+      const versions = await client.version()
+      const version = versions[client.id]
+
+      expect(stats[client.id]).to.be.an('object')
+      expect(stats[client.id].version).to.be.a('string').equal(version) // strings
+      expect(stats[client.id].pid).to.be.a('number') // numbers
+      expect(stats[client.id].cmd_get).to.be.a('bigint') // bigint
+      expect(stats[client.id].accepting_conns).to.be.a('boolean') // boolean
+      expect(stats[client.id].rusage_user).to.be.a('bigint') // microseconds
     })
   })
 
   /* ======================================================================== */
 
   describe('edge cases', () => {
-    const client = new Server({
+    const client = new ServerAdapter({
       host: 'host',
       port: 123456,
       factory: (options: any): any => {
