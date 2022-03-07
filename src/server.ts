@@ -1,7 +1,51 @@
-import { Adapter, Counter, GetResult } from './adapter'
+import { Adapter, Counter, GetResult, Stats } from './adapter'
 import { Connection, ConnectionOptions } from './connection'
 import { BUFFERS, OPCODE, STATUS } from './constants'
 import { RawIncomingPacket } from './decode'
+
+const statsBigInt: readonly string[] = [
+  'auth_cmds', 'auth_errors', 'bytes', 'bytes_read', 'bytes_written', 'cas_badval', 'cas_hits', 'cas_misses',
+  'cmd_flush', 'cmd_get', 'cmd_set', 'cmd_touch', 'conn_yields', 'crawler_items_checked', 'crawler_reclaimed',
+  'curr_items', 'decr_hits', 'decr_misses', 'delete_hits', 'delete_misses', 'direct_reclaims', 'evicted_active',
+  'evicted_unfetched', 'evictions', 'expired_unfetched', 'get_expired', 'get_flushed', 'get_hits', 'get_misses',
+  'hash_bytes', 'idle_kicks', 'incr_hits', 'incr_misses', 'limit_maxbytes', 'listen_disabled_num', 'log_watcher_sent',
+  'log_watcher_skipped', 'log_watchers', 'log_worker_dropped', 'log_worker_written', 'lru_crawler_running',
+  'lru_crawler_starts', 'lru_maintainer_juggles', 'lrutail_reflocked', 'malloc_fails', 'moves_to_cold',
+  'moves_to_warm', 'moves_within_lru', 'read_buf_bytes', 'read_buf_bytes_free', 'read_buf_count', 'read_buf_oom',
+  'reclaimed', 'rejected_connections', 'response_obj_bytes', 'response_obj_count', 'response_obj_oom',
+  'round_robin_fallback', 'slab_reassign_busy_deletes', 'slab_reassign_busy_items', 'slab_reassign_chunk_rescues',
+  'slab_reassign_evictions_nomem', 'slab_reassign_inline_reclaim', 'slab_reassign_rescues', 'slabs_moved',
+  'store_no_memory', 'store_too_large', 'time_in_listen_disabled_us', 'total_items', 'touch_hits', 'touch_misses',
+  'unexpected_napi_ids',
+]
+
+const statsNumber: readonly string[] = [
+  'connection_structures', 'curr_connections', 'hash_power_level', 'max_connections', 'pid', 'pointer_size',
+  'reserved_fds', 'slab_global_page_pool', 'threads', 'time', 'total_connections', 'uptime',
+] as const
+
+const statsBoolean: readonly string[] = [ 'accepting_conns', 'hash_is_expanding', 'slab_reassign_running' ] as const
+
+const statsMicroseconds: readonly string[] = [ 'rusage_system', 'rusage_user' ] as const
+
+function injectStats(key: string, value: string, stats: any): Stats {
+  if (! key) return stats
+
+  if (statsBigInt.includes(key)) {
+    stats[key] = BigInt(value)
+  } else if (statsNumber.includes(key)) {
+    stats[key] = Number(value)
+  } else if (statsBoolean.includes(key)) {
+    stats[key] = !! Number(value)
+  } else if (statsMicroseconds.includes(key)) {
+    const splits = value.split('.')
+    stats[key] = BigInt(`${splits[0]}${splits[1].padEnd(6, '0')}`)
+  } else {
+    stats[key] = value
+  }
+  return stats
+}
+
 
 function fail(packet: RawIncomingPacket, key?: string): never {
   const message = packet.value.toString('utf-8') || 'Unknown Error'
@@ -9,28 +53,24 @@ function fail(packet: RawIncomingPacket, key?: string): never {
   throw new Error(`${message} (status=${status}${key ? `, key=${key}` : ''})`)
 }
 
-// function hashCode(key: string): number {
-//   const length = key.length
-//   let hash = 0
-
-//   for (let i = 0; i < length; i ++) hash = hash * 31 + key.charCodeAt(i)
-
-//   return hash
-// }
-
 export interface ServerOptions extends ConnectionOptions {
   ttl?: number
 }
 
-export class Server implements Adapter {
+export class ServerAdapter implements Adapter {
   #buffer = Buffer.alloc(BUFFERS.KEY_TOO_BIG + 20) // 20 is the max extras we'll write
 
   #connection!: Connection
   #ttl!: number
 
+  readonly id!: string
+
   constructor(options: ServerOptions) {
     this.#connection = new Connection(options)
     this.#ttl = options.ttl || 0 // never
+
+    const id = `${this.#connection.host}:${this.#connection.port}`
+    Object.defineProperty(this, 'id', { value: id, enumerable: true, configurable: false })
   }
 
   get connected(): boolean {
@@ -390,7 +430,7 @@ export class Server implements Adapter {
     }
   }
 
-  async version(): Promise<string> {
+  async version(): Promise<Record<string, string>> {
     const [ response ] = await this.#connection.send({
       opcode: OPCODE.VERSION,
     })
@@ -398,7 +438,7 @@ export class Server implements Adapter {
     try {
       switch (response.status) {
         case STATUS.OK:
-          return response.value.toString('utf-8')
+          return { [this.id]: response.value.toString('utf-8') }
         default:
           fail(response)
       }
@@ -407,24 +447,24 @@ export class Server implements Adapter {
     }
   }
 
-  async stats(): Promise<Record<string, string>> {
+  async stats(): Promise<Record<string, Stats>> {
     const responses = await this.#connection.send({
       opcode: OPCODE.STAT,
     })
 
-    return responses.reduce((result, packet) => {
+    const stats = responses.reduce((result, packet) => {
       try {
-        if (packet.status === STATUS.OK) {
-          const key = packet.key.toString('utf-8')
-          const value = packet.value.toString('utf-8')
-          if (key && value) result[key] = value
-          return result
-        }
+        if (packet.status !== STATUS.OK) fail(packet)
 
-        fail(packet)
+        const key = packet.key.toString('utf-8')
+        const value = packet.value.toString('utf-8')
+
+        return injectStats(key, value, result)
       } finally {
         packet.recycle()
       }
-    }, {} as Record<string, string>)
+    }, {})
+
+    return { [this.id]: stats as Stats }
   }
 }
