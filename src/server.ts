@@ -1,4 +1,4 @@
-import { Adapter, Counter, GetResult, SetResult } from './adapter'
+import { Adapter, Counter, GetResult } from './adapter'
 import { Connection, ConnectionOptions } from './connection'
 import { OPCODE, STATUS } from './constants'
 import { RawIncomingPacket } from './decode'
@@ -111,7 +111,7 @@ export class Server implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<SetResult | void> {
+  ): Promise<bigint | void> {
     const { flags = 0, cas = 0n, ttl = this.#ttl } = options
 
     this.#buffer.writeUInt32BE(flags, 0)
@@ -132,12 +132,11 @@ export class Server implements Adapter {
       value,
     })
 
+    response.recycle()
+
     switch (response.status) {
       case STATUS.OK:
-        return {
-          flags,
-          cas: response.cas,
-        }
+        return response.cas
       case STATUS.KEY_NOT_FOUND:
       case STATUS.KEY_EXISTS:
         return
@@ -150,7 +149,7 @@ export class Server implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number } = {},
-  ): Promise<SetResult | void> {
+  ): Promise<bigint | void> {
     return this.#sar(OPCODE.SET, key, value, options)
   }
 
@@ -158,7 +157,7 @@ export class Server implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number } = {},
-  ): Promise<SetResult | void> {
+  ): Promise<bigint | void> {
     return this.#sar(OPCODE.ADD, key, value, options)
   }
 
@@ -166,7 +165,7 @@ export class Server implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number } = {},
-  ): Promise<SetResult | void> {
+  ): Promise<bigint | void> {
     return this.#sar(OPCODE.REPLACE, key, value, options)
   }
 

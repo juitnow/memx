@@ -1,8 +1,3 @@
-export interface SetResult {
-  flags: number,
-  cas: bigint
-}
-
 export interface GetResult {
   value: Buffer
   flags: number,
@@ -30,19 +25,19 @@ export interface Adapter {
     key: string,
     value: Buffer,
     options?: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<SetResult | void>
+  ): Promise<bigint | void>
 
   add(
     key: string,
     value: Buffer,
     options?: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<SetResult | void>
+  ): Promise<bigint | void>
 
   replace(
     key: string,
     value: Buffer,
     options?: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<SetResult | void>
+  ): Promise<bigint | void>
 
   append(
     key: string,
