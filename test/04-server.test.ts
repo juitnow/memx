@@ -136,6 +136,17 @@ describe('Simple Client', () => {
       await new Promise((resolve) => setTimeout(resolve, 2000))
       expect(await client.get(key)).to.be.undefined
     })
+
+    it('should fail when keys are too long', async () => {
+      const longKey = randomBytes(128).toString('hex').substring(0, 251) // max
+      const goodKey = longKey.substring(0, 250) // good
+
+      expect(longKey.length).to.equal(251)
+      expect(goodKey.length).to.equal(250)
+
+      await expect(client.get(longKey)).to.be.rejectedWith(Error, 'Key too long (len=251)')
+      await expect(client.get(goodKey)).to.be.fulfilled
+    })
   })
 
   /* ======================================================================== */
