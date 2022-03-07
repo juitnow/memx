@@ -53,36 +53,54 @@ export class Connection {
 
   readonly #defers = new Map<number, Deferred>()
   readonly #factory: typeof net.connect
-  readonly #timeout: number
 
   #socket?: Promise<Socket>
   #sequence = 0
 
-  readonly host!: string
-  readonly port!: number
+  readonly #timeout: number
+  readonly #host: string
+  readonly #port: number
 
   constructor(options: ConnectionOptions)
   constructor(options: ConnectionOptions & { factory?: typeof net.connect }) {
     const { host, port = 11211, timeout = 10, factory = net.connect } = options
     this.#factory = factory
-    this.#timeout = timeout
 
     if (! host) throw new Error('No host name specified')
     if ((port < 1) || (port > 65535) || (Math.floor(port) != port)) {
       throw new Error(`Invalid port ${port}`)
     }
 
-    Object.defineProperties(this, {
-      host: { value: host, enumerable: true, configurable: false },
-      port: { value: port, enumerable: true, configurable: false },
-    })
+    this.#timeout = timeout
+    this.#host = host
+    this.#port = port
   }
+
+  /* ======================================================================== */
+
+  get connected(): boolean {
+    return !! this.#socket
+  }
+
+  get host(): string {
+    return this.#host
+  }
+
+  get port(): number {
+    return this.#port
+  }
+
+  get timeout(): number {
+    return this.#timeout
+  }
+
+  /* ======================================================================== */
 
   #connect(): Promise<Socket> {
     return this.#socket || (this.#socket = new Promise((resolve, reject) => {
       const socket: Socket = this.#factory({
-        host: this.host,
-        port: this.port,
+        host: this.#host,
+        port: this.#port,
         timeout: this.#timeout,
         onread: {
           buffer: this.#socketBuffer,
@@ -133,10 +151,6 @@ export class Connection {
         return deferred.reject(new Error(`Opcode mismatch (sent=${sent}, received=${received})`))
       }
     }
-  }
-
-  get connected(): boolean {
-    return !! this.#socket
   }
 
   async send(packet: RawOutgoingPacket): Promise<RawIncomingPackets> {

@@ -19,10 +19,12 @@ describe('Connection', () => {
     const c1 = new Connection({ host: 'foo' })
     expect(c1).to.have.property('host', 'foo')
     expect(c1).to.have.property('port', 11211)
+    expect(c1).to.have.property('timeout', 10)
 
-    const c2 = new Connection({ host: 'bar', port: 12345 })
+    const c2 = new Connection({ host: 'bar', port: 12345, timeout: 99 })
     expect(c2).to.have.property('host', 'bar')
     expect(c2).to.have.property('port', 12345)
+    expect(c2).to.have.property('timeout', 99)
 
     expect(() => new Connection({ host: '', port: 54321 }))
         .to.throw(Error, 'No host name specified')
