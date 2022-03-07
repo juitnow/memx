@@ -1,4 +1,4 @@
-import { Adapter, Counter, GetResult, Stats } from './adapter'
+import { Adapter, Counter, AdapterResult, Stats } from './types'
 import { ServerAdapter, ServerOptions } from './server'
 
 function parseHosts(hosts?: string): ServerOptions[] {
@@ -75,7 +75,7 @@ export class ClusterAdapter implements Adapter {
     return this.servers[hash % this.servers.length]
   }
 
-  get(key: string, options?: { ttl?: number | undefined }): Promise<void | GetResult> {
+  get(key: string, options?: { ttl?: number | undefined }): Promise<void | AdapterResult> {
     return this.server(key).get(key, options)
   }
 

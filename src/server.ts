@@ -1,4 +1,4 @@
-import { Adapter, Counter, GetResult, Stats } from './adapter'
+import { Adapter, Counter, AdapterResult, Stats } from './types'
 import { Connection, ConnectionOptions } from './connection'
 import { BUFFERS, OPCODE, STATUS } from './constants'
 import { RawIncomingPacket } from './decode'
@@ -111,7 +111,7 @@ export class ServerAdapter implements Adapter {
   async get(
     key: string,
     options: { ttl?: number } = {},
-  ): Promise<GetResult | void> {
+  ): Promise<AdapterResult | void> {
     const { ttl } = options
 
     let keyOffset = 0

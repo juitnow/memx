@@ -1,4 +1,4 @@
-export interface GetResult {
+export interface AdapterResult {
   value: Buffer
   flags: number,
   cas: bigint
@@ -197,7 +197,7 @@ export interface Adapter {
   get(
     key: string,
     options?: { ttl?: number },
-  ): Promise<GetResult | void>
+  ): Promise<AdapterResult | void>
 
   touch(
     key: string,
