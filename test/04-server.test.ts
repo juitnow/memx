@@ -515,6 +515,10 @@ describe('Simple Client', () => {
       },
     })
 
+    it('should get the server id', async () => {
+      await expect(client.id).to.equal('host:12345')
+    })
+
     it('should fail on get', async () => {
       await expect(client.get('foo')).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
     })
