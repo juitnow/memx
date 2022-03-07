@@ -9,14 +9,14 @@ function fail(packet: RawIncomingPacket, key?: string): never {
   throw new Error(`${message} (status=${status}${key ? `, key=${key}` : ''})`)
 }
 
-function hashCode(key: string): number {
-  const length = key.length
-  let hash = 0
+// function hashCode(key: string): number {
+//   const length = key.length
+//   let hash = 0
 
-  for (let i = 0; i < length; i ++) hash = hash * 31 + key.charCodeAt(i)
+//   for (let i = 0; i < length; i ++) hash = hash * 31 + key.charCodeAt(i)
 
-  return hash
-}
+//   return hash
+// }
 
 export interface ServerOptions extends ConnectionOptions {
   ttl?: number
@@ -44,9 +44,6 @@ export class Server implements Adapter {
     options: { ttl?: number } = {},
   ): Promise<GetResult | void> {
     const { ttl } = options
-
-    const hash = hashCode(key)
-    void hash
 
     let extras: Buffer | undefined
     if (ttl) {
