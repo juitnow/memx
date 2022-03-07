@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 
 import memjs from 'memjs'
-import { Server } from '../src/index'
+import { ServerAdapter } from '../src/index'
 
 const m = memjs.Client.create('127.0.0.1:11211')
-const s = new Server({ host: '127.0.0.1', port: 11211 })
+const s = new ServerAdapter({ host: '127.0.0.1', port: 11211 })
 
 const k = 'fooBar'
 const v = Buffer.from('AndSomethingLongerForTheWin', 'utf8')
@@ -23,6 +23,17 @@ async function main(): Promise<void> {
   let m2: number = 0
 
   console.log('Running benchmark')
+
+  // Load up everythig first
+  await s.set(k, v, {})
+  ;(await s.get(k))!.recycle()
+  ;(await s.get(k))!.recycle()
+
+  await m.set(k, v, {})
+  await m.get(k)
+  await m.get(k)
+
+  // Go on, test!
 
   await gc()
 
@@ -49,6 +60,8 @@ async function main(): Promise<void> {
   const x2 = process.hrtime.bigint()
   m2 += (process.memoryUsage.rss() - w)
   r2 += (x2 - s2)
+
+  // Report
 
   console.log()
   console.log()
