@@ -502,7 +502,7 @@ describe('Simple Client', () => {
 
     const client = new ServerAdapter2({
       host: 'host',
-      port: 123456,
+      port: 12345,
       factory: (options: any): any => {
         return new class extends FakeSocket {
           $write(string: string, callback: (error?: Error) => void): void {

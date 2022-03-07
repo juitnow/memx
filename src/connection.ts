@@ -40,7 +40,7 @@ class Deferred {
 
 export interface ConnectionOptions {
   host: string,
-  port: number,
+  port?: number,
   timeout?: number,
 }
 
@@ -63,9 +63,15 @@ export class Connection {
 
   constructor(options: ConnectionOptions)
   constructor(options: ConnectionOptions & { factory?: typeof net.connect }) {
-    const { host, port, timeout = 10, factory = net.connect } = options
+    const { host, port = 11211, timeout = 10, factory = net.connect } = options
     this.#factory = factory
     this.#timeout = timeout
+
+    if (! host) throw new Error('No host name specified')
+    if ((port < 1) || (port > 65535) || (Math.floor(port) != port)) {
+      throw new Error(`Invalid port ${port}`)
+    }
+
     Object.defineProperties(this, {
       host: { value: host, enumerable: true, configurable: false },
       port: { value: port, enumerable: true, configurable: false },
