@@ -42,7 +42,6 @@ export interface ConnectionOptions {
   host: string,
   port: number,
   timeout?: number,
-  factory?: typeof net.connect,
 }
 
 export class Connection {
@@ -62,7 +61,8 @@ export class Connection {
   readonly host!: string
   readonly port!: number
 
-  constructor(options: ConnectionOptions) {
+  constructor(options: ConnectionOptions)
+  constructor(options: ConnectionOptions & { factory?: typeof net.connect }) {
     const { host, port, timeout = 10, factory = net.connect } = options
     this.#factory = factory
     this.#timeout = timeout
