@@ -33,7 +33,7 @@ describe('Server Adapter', () => {
       expect(s2).to.have.property('port', 12345)
       expect(s2).to.have.property('timeout', 99)
       expect(s2).to.have.property('ttl', 100)
-      expect(s1).to.have.property('id', 'bar:12345')
+      expect(s2).to.have.property('id', 'bar:12345')
     })
   })
 
