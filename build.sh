@@ -15,8 +15,6 @@ cp build/types/index.d.ts index.d.ts
 # Prep sources and tests
 esbuild --format=cjs build.ts | node -
 
-set +e
-
 # Run tests and collect coverage
 nyc --reporter=html --reporter=text mocha 'build/test/**/*.test.js'
 
