@@ -1,8 +1,13 @@
 import { expect } from 'chai'
 import { connection, constants } from '../src/index'
 
+/* ========================================================================== */
+
 import { FakeSocket } from './fake-socket'
-const Connection = connection.Connection
+
+const Connection = connection.Connection as {
+  new (options: any): connection.Connection
+}
 
 /* ========================================================================== */
 

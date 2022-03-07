@@ -496,7 +496,11 @@ describe('Simple Client', () => {
   /* ======================================================================== */
 
   describe('edge cases', () => {
-    const client = new ServerAdapter({
+    const ServerAdapter2 = ServerAdapter as {
+      new (options: any): ServerAdapter
+    }
+
+    const client = new ServerAdapter2({
       host: 'host',
       port: 123456,
       factory: (options: any): any => {
