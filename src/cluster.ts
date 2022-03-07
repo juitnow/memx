@@ -1,22 +1,69 @@
 import { Adapter, Counter, GetResult, Stats } from './adapter'
 import { ServerAdapter } from './server'
 
+function parseHosts(hosts?: string): { host: string, port?: number }[] {
+  const result: { host: string, port?: number }[] = []
+  if (! hosts) return result
+
+  for (const part of hosts.split(',')) {
+    const [ host, p ] = part.split(':')
+    const port = parseInt(p) || undefined
+    result.push({ host, port })
+  }
+
+  return result
+}
+
 
 export interface ClusterOptions {
-  hosts: (string | { host: string, port?: string })[],
+  hosts: string | (string | { host: string, port?: number })[],
   timeout?: number,
   ttl?: number
 }
 
 export class ClusterAdapter implements Adapter {
-  readonly servers: readonly ServerAdapter[] = []
+  readonly servers: readonly ServerAdapter[]
 
   constructor()
   constructor(servers: ServerAdapter[])
   constructor(options: ClusterOptions)
 
   constructor(serversOrOptions?: ServerAdapter[] | ClusterOptions) {
-    void serversOrOptions
+    // If we have an array of servers, just copy it and use it
+    if (Array.isArray(serversOrOptions)) {
+      this.servers = [ ...serversOrOptions ]
+
+    // This was created with "options"... Convert and construct
+    } else if (serversOrOptions) {
+      const { ttl, timeout, hosts: defs } = serversOrOptions
+      const hosts: { host: string, port?: number }[] = []
+
+      if (Array.isArray(defs)) {
+        defs.forEach((def) => {
+          if (typeof def === 'string') hosts.push(...parseHosts(def))
+          else hosts.push({ port: 11211, ...def })
+        })
+      } else {
+        hosts.push(...parseHosts(defs))
+      }
+
+      this.servers = hosts.map((host) => new ServerAdapter({ ttl, timeout, ...host }))
+
+    // Anything else gets initialized from environment variables
+    } else {
+      const hosts = parseHosts(process.env.MEMCACHED_HOSTS)
+      const ttl = process.env.MEMCACHED_TTL && parseInt(process.env.MEMCACHED_TTL) || undefined
+      const timeout = process.env.MEMCACHED_TIMEOUT && parseInt(process.env.MEMCACHED_TIMEOUT) || undefined
+
+      this.servers = hosts.map((host) => new ServerAdapter({ ttl, timeout, ...host }))
+    }
+
+    // Validate and shortcut in case of single-servers setup
+    if (this.servers.length < 1) throw new Error('No hosts configured')
+    if (this.servers.length === 1) this.server = (): ServerAdapter => this.servers[0]
+
+    // Freeze our lists of servers
+    Object.freeze(this.servers)
   }
 
   server(key: string): ServerAdapter {
