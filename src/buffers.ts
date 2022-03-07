@@ -1,13 +1,7 @@
 import { BUFFERS } from './constants'
 
 const pool: Buffer[] = new Array(BUFFERS.POOL_SIZE)
-let recycles = 0
 let offset = -1
-
-process.on('exit', () => {
-  console.log('RECYCLES', recycles)
-})
-
 
 export interface RecyclableBuffer extends Buffer {
   recycle(): void
@@ -26,7 +20,6 @@ export function allocateBuffer(size: number): RecyclableBuffer {
   recyclable.recycle = (): void => queueMicrotask(() => {
     if ((offset >= BUFFERS.POOL_SIZE) || recycled) return
     pool[++offset] = buffer
-    recycles ++
     recycled = true
   })
 
