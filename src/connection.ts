@@ -56,18 +56,20 @@ export class Connection {
   readonly #factory: typeof net.connect
   readonly #timeout: number
 
-  readonly host: string
-  readonly port: number
-
   #socket?: Promise<Socket>
   #sequence = 0
+
+  readonly host!: string
+  readonly port!: number
 
   constructor(options: ConnectionOptions) {
     const { host, port, timeout = 10, factory = net.connect } = options
     this.#factory = factory
     this.#timeout = timeout
-    this.host = host
-    this.port = port
+    Object.defineProperties(this, {
+      host: { value: host, enumerable: true, configurable: false },
+      port: { value: port, enumerable: true, configurable: false },
+    })
   }
 
   #connect(): Promise<Socket> {
