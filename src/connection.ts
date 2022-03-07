@@ -37,7 +37,7 @@ class Deferred {
   }
 }
 
-const finalizationRegistry = new FinalizationRegistry<Socket>((socket) => {
+const finalizationRegistry = new FinalizationRegistry((socket: Socket): void => {
   if (! socket.destroyed) socket.destroy()
 })
 
@@ -92,7 +92,7 @@ export class Connection {
       socket.on('error', reject)
 
       socket.on('close', () => {
-        finalizationRegistry.register(this, socket, this)
+        finalizationRegistry.unregister(this)
         this.#socket = undefined
       })
 

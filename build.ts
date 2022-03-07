@@ -15,6 +15,7 @@ function build(options: esbuild.BuildOptions = {}): Promise<esbuild.BuildResult>
     sourcemap: true, // generate external source maps
     sourcesContent: false, // no contents in source maps
     treeShaking: false, // NO
+    legalComments: 'none',
     plugins: [{
       name: 'justus-build',
       setup(build) {
@@ -48,6 +49,7 @@ async function main() {
     outfile: 'build/src/index.js',
     entryPoints: [ './src/index.ts' ],
     sourcemap: 'inline',
+    legalComments: 'inline',
   })
 
   const tests = (await fs.promises.readdir('test')).map((file) => {

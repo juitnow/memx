@@ -100,6 +100,35 @@ describe('Decoding Packets', () => {
       extras: Buffer.from('FooBar', 'utf-8'),
       key: Buffer.from('Hello', 'utf-8'),
       value: Buffer.from('World!', 'utf-8'),
+      recycle: processed[0].recycle,
     } ])
+
+    expect(processed[0].recycle()).to.be.undefined
+  })
+
+  it('should decode a packet with no body', () => {
+    const buffer = Buffer.from([
+      0x81, 0x07, 0x00, 0x00, // response, opcode "quit", key length (x2)
+      0x00, 0x00, 0x00, 0x03, // extras length, data type, status "too large" (x2)
+      0x00, 0x00, 0x00, 0x00, // body length
+      0x01, 0x02, 0x03, 0x04, // sequence
+      0x05, 0x06, 0x07, 0x08, // cas...
+      0x09, 0x0a, 0x0b, 0x0c, // ...cas
+    ])
+
+    new decode.Decoder(handler).append(buffer, 0, buffer.length)
+
+    expect(processed).to.eql([ {
+      opcode: constants.OPCODE.QUIT,
+      status: constants.STATUS.TOO_LARGE,
+      sequence: 0x01020304,
+      cas: 0x05060708090a0b0cn,
+      extras: Buffer.alloc(0),
+      key: Buffer.alloc(0),
+      value: Buffer.alloc(0),
+      recycle: processed[0].recycle,
+    } ])
+
+    expect(processed[0].recycle()).to.be.undefined
   })
 })

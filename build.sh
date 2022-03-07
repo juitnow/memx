@@ -16,7 +16,10 @@ cp build/types/index.d.ts index.d.ts
 esbuild --format=cjs build.ts | node -
 
 # Run tests and collect coverage
-nyc --reporter=html --reporter=text mocha 'build/test/**/*.js'
+nyc --reporter=html --reporter=text mocha 'build/test/**/*.test.js'
+
+# Run bench
+node --expose-gc ./build/test/bench.js
 
 # Lint our code
 eslint src test

@@ -24,46 +24,6 @@ export interface RawIncomingPacket {
   recycle: () => void
 }
 
-class RawIncomingPacketImpl implements RawIncomingPacket {
-  #body?: RecyclableBuffer
-
-  readonly opcode: number
-  readonly status: number
-  readonly sequence: number
-  readonly cas: bigint
-  readonly extras: Buffer
-  readonly key: Buffer
-  readonly value: Buffer
-
-  constructor(header: Buffer, body?: RecyclableBuffer) {
-    this.opcode = header.readUInt8(OFFSETS.OPCODE_$8)
-    this.status = header.readUInt16BE(OFFSETS.STATUS_$16)
-    this.sequence = header.readUInt32BE(OFFSETS.SEQUENCE_$32)
-    this.cas = header.readBigUInt64BE(OFFSETS.CAS_$64)
-
-    if (body) {
-      const bodyLength = header.readUInt32BE(OFFSETS.BODY_LENGTH_$32)
-      const keyLength = header.readUInt16BE(OFFSETS.KEY_LENGTH_$16)
-      const extrasLength = header.readUInt8(OFFSETS.EXTRAS_LENGTH_$8)
-      const valueLength = bodyLength - keyLength - extrasLength
-
-      this.key = keyLength ? body.subarray(extrasLength, extrasLength + keyLength) : EMPTY_BUFFER
-      this.value = valueLength ? body.subarray(extrasLength + keyLength) : EMPTY_BUFFER
-      this.extras = extrasLength ? body.subarray(0, extrasLength) : EMPTY_BUFFER
-
-      this.#body = body
-    } else {
-      this.extras = EMPTY_BUFFER
-      this.key = EMPTY_BUFFER
-      this.value = EMPTY_BUFFER
-    }
-  }
-
-  recycle(): void {
-    this.#body?.recycle()
-  }
-}
-
 export class Decoder {
   #consumer: (packet: RawIncomingPacket) => void
   #header = Buffer.allocUnsafeSlow(24)
@@ -86,7 +46,10 @@ export class Decoder {
 
       if (this.#pos < 24) return
 
-      let packet: RawIncomingPacketImpl
+      let extras = EMPTY_BUFFER
+      let key = EMPTY_BUFFER
+      let value = EMPTY_BUFFER
+      let recycle = () => void 0
 
       const bodyLength = header.readUInt32BE(OFFSETS.BODY_LENGTH_$32)
       if (bodyLength) {
@@ -98,9 +61,25 @@ export class Decoder {
 
         if (this.#pos - 24 < body.length) return
 
-        packet = new RawIncomingPacketImpl(header, body)
-      } else {
-        packet = new RawIncomingPacketImpl(header)
+        const keyLength = header.readUInt16BE(OFFSETS.KEY_LENGTH_$16)
+        const extrasLength = header.readUInt8(OFFSETS.EXTRAS_LENGTH_$8)
+        const valueLength = bodyLength - keyLength - extrasLength
+
+        key = keyLength ? body.subarray(extrasLength, extrasLength + keyLength) : EMPTY_BUFFER
+        value = valueLength ? body.subarray(extrasLength + keyLength) : EMPTY_BUFFER
+        extras = extrasLength ? body.subarray(0, extrasLength) : EMPTY_BUFFER
+        recycle = () => void body.recycle()
+      }
+
+      const packet: RawIncomingPacket = {
+        opcode: header.readUInt8(OFFSETS.OPCODE_$8),
+        status: header.readUInt16BE(OFFSETS.STATUS_$16),
+        sequence: header.readUInt32BE(OFFSETS.SEQUENCE_$32),
+        cas: header.readBigUInt64BE(OFFSETS.CAS_$64),
+        extras,
+        key,
+        value,
+        recycle,
       }
 
       const magic = header.readUInt8(OFFSETS.MAGIC_$8)

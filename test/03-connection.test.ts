@@ -44,6 +44,7 @@ describe('Connection', () => {
       key: constants.EMPTY_BUFFER,
       value: constants.EMPTY_BUFFER,
       extras: constants.EMPTY_BUFFER,
+      recycle: reply[0].recycle,
     } ])
 
     expect(await connection.destroy()).to.be.false
@@ -155,6 +156,7 @@ describe('Connection', () => {
       key: Buffer.from('foo'),
       value: Buffer.from('bar'),
       extras: constants.EMPTY_BUFFER,
+      recycle: result[0].recycle,
     }, {
       opcode: 16,
       status: 0,
@@ -163,6 +165,7 @@ describe('Connection', () => {
       key: constants.EMPTY_BUFFER,
       value: constants.EMPTY_BUFFER,
       extras: constants.EMPTY_BUFFER,
+      recycle: result[1].recycle,
     } ])
   })
 
@@ -196,7 +199,8 @@ describe('Connection', () => {
     const promise = connection.send({ opcode: constants.OPCODE.QUIT })
     expect(connection.connected).to.be.true
 
-    expect(await promise).to.eql([ {
+    const result = await promise
+    expect(result).to.eql([ {
       opcode: constants.OPCODE.QUIT,
       status: constants.STATUS.OK,
       sequence: 1,
@@ -204,6 +208,7 @@ describe('Connection', () => {
       key: constants.EMPTY_BUFFER,
       value: constants.EMPTY_BUFFER,
       extras: constants.EMPTY_BUFFER,
+      recycle: result[0].recycle,
     } ])
 
     await new Promise((resolve) => setTimeout(resolve, 100))
