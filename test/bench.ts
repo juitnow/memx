@@ -10,10 +10,10 @@ const k = 'fooBar'
 const v = Buffer.from('AndSomethingLongerForTheWin', 'utf8')
 
 async function gc(): Promise<void> {
-  globalThis.gc?.()
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  globalThis.gc?.()
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  for (let i = 0; i < 4; i ++) {
+    globalThis.gc?.()
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
 }
 
 async function main(): Promise<void> {
@@ -22,37 +22,33 @@ async function main(): Promise<void> {
   let m1: number = 0
   let m2: number = 0
 
-  process.stdout.write('Running benchmark')
+  console.log('Running benchmark')
 
-  for (let j = 0; j < 10; j ++) {
-    process.stdout.write('.')
-    await gc()
+  await gc()
 
-    const q = process.memoryUsage.rss()
-    const s1 = process.hrtime.bigint()
-    for (let i = 0; i < 1000; i ++) {
-      await m.set(k, v, {})
-      await m.get(k)
-      await m.get(k)
-    }
-    const x1 = process.hrtime.bigint()
-    m1 += (process.memoryUsage.rss() - q)
-    r1 += (x1 - s1)
-
-    process.stdout.write('.')
-    await gc()
-
-    const w = process.memoryUsage.rss()
-    const s2 = process.hrtime.bigint()
-    for (let i = 0; i < 1000; i ++) {
-      await s.set(k, v, {})
-      ;(await s.get(k))!.recycle()
-      ;(await s.get(k))!.recycle()
-    }
-    const x2 = process.hrtime.bigint()
-    m2 += (process.memoryUsage.rss() - w)
-    r2 += (x2 - s2)
+  const q = process.memoryUsage.rss()
+  const s1 = process.hrtime.bigint()
+  for (let i = 0; i < 10000; i ++) {
+    await m.set(k, v, {})
+    await m.get(k)
+    await m.get(k)
   }
+  const x1 = process.hrtime.bigint()
+  m1 += (process.memoryUsage.rss() - q)
+  r1 += (x1 - s1)
+
+  await gc()
+
+  const w = process.memoryUsage.rss()
+  const s2 = process.hrtime.bigint()
+  for (let i = 0; i < 10000; i ++) {
+    await s.set(k, v, {})
+    ;(await s.get(k))!.recycle()
+    ;(await s.get(k))!.recycle()
+  }
+  const x2 = process.hrtime.bigint()
+  m2 += (process.memoryUsage.rss() - w)
+  r2 += (x2 - s2)
 
   console.log()
   console.log()
