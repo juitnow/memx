@@ -3,6 +3,7 @@ import net, { Socket } from 'net'
 import { Encoder, RawOutgoingPacket } from './encode'
 import { Decoder, RawIncomingPacket } from './decode'
 import { BUFFERS, OPCODE } from './constants'
+import { socketFinalizationRegistry } from './finalization'
 
 type RawIncomingPackets = [ RawIncomingPacket, ...RawIncomingPacket[] ]
 
@@ -36,10 +37,6 @@ class Deferred {
     this.#reject(error)
   }
 }
-
-const finalizationRegistry = new FinalizationRegistry((socket: Socket): void => {
-  if (! socket.destroyed) socket.destroy()
-})
 
 export interface ConnectionOptions {
   host: string,
@@ -92,12 +89,12 @@ export class Connection {
       socket.on('error', reject)
 
       socket.on('close', () => {
-        finalizationRegistry.unregister(this)
+        socketFinalizationRegistry.unregister(this)
         this.#socket = undefined
       })
 
       socket.on('connect', () => {
-        finalizationRegistry.register(this, socket, this)
+        socketFinalizationRegistry.register(this, socket, this)
 
         socket.off('error', reject)
         socket.on('error', (error) => {
