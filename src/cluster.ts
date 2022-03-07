@@ -1,7 +1,7 @@
 import { Adapter, Counter, GetResult, Stats } from './adapter'
-import { ServerAdapter } from './server'
+import { ServerAdapter, ServerOptions } from './server'
 
-function parseHosts(hosts?: string): { host: string, port?: number }[] {
+function parseHosts(hosts?: string): ServerOptions[] {
   const result: { host: string, port?: number }[] = []
   if (! hosts) return result
 
@@ -16,7 +16,7 @@ function parseHosts(hosts?: string): { host: string, port?: number }[] {
 
 
 export interface ClusterOptions {
-  hosts: string | (string | { host: string, port?: number })[],
+  hosts: string | string[] | ServerOptions[],
   timeout?: number,
   ttl?: number
 }
@@ -36,7 +36,7 @@ export class ClusterAdapter implements Adapter {
     // This was created with "options"... Convert and construct
     } else if (serversOrOptions) {
       const { ttl, timeout, hosts: defs } = serversOrOptions
-      const hosts: { host: string, port?: number }[] = []
+      const hosts: ServerOptions[] = []
 
       if (Array.isArray(defs)) {
         defs.forEach((def) => {
