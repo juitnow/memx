@@ -137,6 +137,22 @@ describe('Simple Client', () => {
       expect(await client.get(key)).to.be.undefined
     })
 
+    it('should get and set a super-long value', async () => {
+      const longValue = randomBytes(128 * 1024) // yes, 128kb
+
+      const cas = await client.set(key, longValue)
+      expect(cas).to.be.a('bigint')
+
+      const get = await client.get(key)
+      expect(get).excluding('recycle').to.eql({
+        value: longValue,
+        flags: 0,
+        cas,
+      })
+
+      get!.recycle()
+    })
+
     it('should fail when keys are too long', async () => {
       const longKey = randomBytes(128).toString('hex').substring(0, 251) // max
       const goodKey = longKey.substring(0, 250) // good
