@@ -58,6 +58,7 @@ export interface ClientResult<T extends Serializable> {
 
 export class Client {
   #adapter!: Adapter
+  #prefix: string
 
   constructor()
   constructor(adapter: Adapter)
@@ -72,6 +73,8 @@ export class Client {
       this.#adapter = new ClusterAdapter(adapterOrOptions)
     }
 
+    this.#prefix = ''
+
     assert(this.#adapter, 'Invalid client constructor arguments')
   }
 
@@ -79,8 +82,15 @@ export class Client {
     return this.#adapter
   }
 
+  withPrefix(prefix: string): Client {
+    assert(prefix, 'Invalid prefix')
+    const client = new Client(this.#adapter)
+    client.#prefix = prefix
+    return client
+  }
+
   async get<T extends Serializable>(key: string, options?: { ttl?: number }): Promise<ClientResult<T> | void> {
-    const result = await this.#adapter.get(key, options)
+    const result = await this.#adapter.get(this.#prefix + key, options)
     if (! result) return
 
     try {
@@ -133,15 +143,15 @@ export class Client {
   }
 
   async set(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
-    return this.#adapter.set(key, ...toBuffer(value, options))
+    return this.#adapter.set(this.#prefix + key, ...toBuffer(value, options))
   }
 
   async add(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
-    return this.#adapter.add(key, ...toBuffer(value, options))
+    return this.#adapter.add(this.#prefix + key, ...toBuffer(value, options))
   }
 
   async replace(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
-    return this.#adapter.replace(key, ...toBuffer(value, options))
+    return this.#adapter.replace(this.#prefix + key, ...toBuffer(value, options))
   }
 
   append(
@@ -149,7 +159,7 @@ export class Client {
     value: Appendable,
     options?: { cas?: bigint },
   ): Promise<boolean> {
-    return this.#adapter.append(key, ...toBuffer(value, options))
+    return this.#adapter.append(this.#prefix + key, ...toBuffer(value, options))
   }
 
   prepend(
@@ -157,7 +167,7 @@ export class Client {
     value: Appendable,
     options?: { cas?: bigint },
   ): Promise<boolean> {
-    return this.#adapter.prepend(key, ...toBuffer(value, options))
+    return this.#adapter.prepend(this.#prefix + key, ...toBuffer(value, options))
   }
 
   async increment(
@@ -165,11 +175,9 @@ export class Client {
     delta?: bigint | number,
     options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | void> {
-    const counter = await this.#adapter.increment(key, delta, options)
+    const counter = await this.#adapter.increment(this.#prefix + key, delta, options)
 
-    if (counter && options &&
-        (options.initial !== undefined) &&
-        (counter.value === BigInt(options.initial))) {
+    if ((options?.initial !== undefined) && (counter?.value === BigInt(options.initial))) {
       const cas = await this.replace(key, counter.value, { cas: counter.cas, ttl: options.ttl })
       counter.cas = cas ?? counter.cas
     }
@@ -181,11 +189,9 @@ export class Client {
     delta?: bigint | number,
     options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | void> {
-    const counter = await this.#adapter.decrement(key, delta, options)
+    const counter = await this.#adapter.decrement(this.#prefix + key, delta, options)
 
-    if (counter && options &&
-        (options.initial !== undefined) &&
-        (counter.value === BigInt(options.initial))) {
+    if ((options?.initial !== undefined) && (counter?.value === BigInt(options.initial))) {
       const cas = await this.replace(key, counter.value, { cas: counter.cas, ttl: options.ttl })
       counter.cas = cas ?? counter.cas
     }
@@ -196,14 +202,14 @@ export class Client {
     key: string,
     options?: { ttl?: number },
   ): Promise<boolean> {
-    return this.#adapter.touch(key, options)
+    return this.#adapter.touch(this.#prefix + key, options)
   }
 
   delete(
     key: string,
     options?: { cas?: bigint },
   ): Promise<boolean> {
-    return this.#adapter.delete(key, options)
+    return this.#adapter.delete(this.#prefix + key, options)
   }
 
   flush(ttl?: number): Promise<void> {

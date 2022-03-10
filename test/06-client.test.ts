@@ -332,4 +332,74 @@ describe('Memcached Client', () => {
       expect(client.stats()).to.eql([ 'stats' ])
     })
   })
+
+  /* ======================================================================== */
+
+  describe('prefixes', () => {
+    const prefixed = client.withPrefix('foo:')
+
+    it('get/set (1)', async () => {
+      await prefixed.set(key, 'foobar')
+      expect((await client.get('foo:' + key))?.value).to.equal('foobar')
+    })
+
+    it('get/set (2)', async () => {
+      await client.set('foo:' + key, 'foobar')
+      expect((await prefixed.get(key))?.value).to.equal('foobar')
+    })
+
+    it('add', async () => {
+      await prefixed.add(key, 'foobar')
+      expect((await client.get('foo:' + key))?.value).to.equal('foobar')
+    })
+
+    it('replace', async () => {
+      await client.set('foo:' + key, 'wrong')
+      await prefixed.replace(key, 'foobar')
+      expect((await client.get('foo:' + key))?.value).to.equal('foobar')
+    })
+
+    it('append', async () => {
+      await client.set('foo:' + key, 'foo')
+      await prefixed.append(key, 'bar')
+      expect((await client.get('foo:' + key))?.value).to.equal('foobar')
+    })
+
+    it('prepend', async () => {
+      await client.set('foo:' + key, 'bar')
+      await prefixed.prepend(key, 'foo')
+      expect((await client.get('foo:' + key))?.value).to.equal('foobar')
+    })
+
+    it('increment', async () => {
+      await prefixed.increment(key, 10, { initial: 50 })
+      expect((await client.get('foo:' + key))?.value).to.equal(50n)
+    })
+
+    it('decrement', async () => {
+      await prefixed.decrement(key, 10, { initial: 50 })
+      expect((await client.get('foo:' + key))?.value).to.equal(50n)
+    })
+
+    it('touch', async function() {
+      this.timeout(10000)
+      this.slow(3000)
+
+      await client.set('foo:' + key, 'foobar')
+
+      expect((await prefixed.touch(key, { ttl: 1 }))).to.be.true
+      expect((await client.get('foo:' + key))?.value).to.equal('foobar')
+
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      expect(await client.get('foo:' + key)).to.be.undefined
+    })
+
+    it('delete', async () => {
+      await client.set('foo:' + key, 'foobar')
+
+      expect((await client.get('foo:' + key))?.value).to.equal('foobar')
+      expect(await prefixed.delete(key)).to.be.true
+      expect((await client.get('foo:' + key))?.value).to.be.undefined
+    })
+  })
 })
