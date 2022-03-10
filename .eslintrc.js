@@ -12,7 +12,6 @@ module.exports = {
     project: [
       './tsconfig.json',
       './test/tsconfig.json',
-      './test-d/tsconfig.json',
     ],
   },
   plugins: [
