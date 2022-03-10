@@ -48,10 +48,7 @@ export interface ConnectionOptions {
 export class Connection {
   readonly #decoder = new Decoder((packet) => this.#receive(packet))
   readonly #encoder = new Encoder()
-
-  readonly #socketBuffer = Buffer.allocUnsafeSlow(BUFFERS.BUFFER_SIZE)
-  readonly #decodeBuffer = Buffer.allocUnsafeSlow(BUFFERS.BUFFER_SIZE)
-
+  readonly #buffer = Buffer.allocUnsafeSlow(BUFFERS.BUFFER_SIZE)
   readonly #defers = new Map<number, Deferred>()
   readonly #factory: typeof net.connect
 
@@ -69,7 +66,7 @@ export class Connection {
     const {
       host,
       port = 11211,
-      timeout = 10,
+      timeout = 1000,
       factory = net.connect,
     } = options
     this.#factory = factory
@@ -109,7 +106,7 @@ export class Connection {
         port: this.#port,
         timeout: this.#timeout,
         onread: {
-          buffer: this.#socketBuffer,
+          buffer: this.#buffer,
           callback: (bytes: number, buffer: Buffer): boolean => {
             this.#decoder.append(buffer, 0, bytes)
             return true
@@ -161,13 +158,14 @@ export class Connection {
 
   async send(packet: RawOutgoingPacket): Promise<RawIncomingPackets> {
     const sequence = ++ this.#sequence
-    const buffer = this.#encoder.encode(this.#decodeBuffer, packet, sequence)
+    const buffer = this.#encoder.encode(packet, sequence)
     const deferred = new Deferred(packet.opcode)
 
     this.#defers.set(sequence, deferred)
 
     const socket = await this.#connect()
     socket.write(buffer, (error) => {
+      buffer.recycle()
       if (error) return deferred.reject(error)
     })
 
