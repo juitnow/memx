@@ -67,7 +67,7 @@ export class ServerAdapter implements Adapter {
 
   constructor(options: ServerOptions) {
     this.#connection = new Connection(options)
-    this.#ttl = options?.ttl || 0 // never
+    this.#ttl = options.ttl || 0 // never
     this.#id = `${this.#connection.host}:${this.#connection.port}`
   }
 
@@ -299,19 +299,18 @@ export class ServerAdapter implements Adapter {
     opcode: OPCODE.INCREMENT | OPCODE.DECREMENT,
     key: string,
     delta: bigint | number,
-    options: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean },
+    options: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | void> {
     const {
-      initial = 0n,
+      initial,
       cas = 0n,
       ttl = this.#ttl,
-      create = true,
     } = options
 
     let keyOffset: number
     keyOffset = this.#buffer.writeBigUInt64BE(BigInt(delta))
-    keyOffset = this.#buffer.writeBigUInt64BE(BigInt(initial), keyOffset)
-    keyOffset = this.#buffer.writeUInt32BE(create ? ttl : 0xffffffff, keyOffset)
+    keyOffset = this.#buffer.writeBigUInt64BE(BigInt(initial || 0n), keyOffset)
+    keyOffset = this.#buffer.writeUInt32BE(initial == undefined ? 0xffffffff : ttl, keyOffset)
     const keyLength = this.#writeKey(key, keyOffset)
 
     const [ response ] = await this.#connection.send({

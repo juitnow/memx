@@ -324,7 +324,7 @@ describe('Server Adapter', () => {
 
   describe('increment/decrement', () => {
     it('should create and increment a counter', async () => {
-      expect(await client.increment(key)).property('value').equal(0n)
+      expect(await client.increment(key, 1, { initial: 0 })).property('value').equal(0n)
       expect(await client.increment(key)).property('value').equal(1n)
       expect(await client.increment(key, 10)).property('value').equal(11n)
       expect(await client.get(key)).property('value').eql(Buffer.from('11'))
@@ -348,8 +348,8 @@ describe('Server Adapter', () => {
     })
 
     it('should skip creation of counters on demand', async () => {
-      expect(await client.increment(key, 1, { create: false })).to.be.undefined
-      expect(await client.decrement(key, 1, { create: false })).to.be.undefined
+      expect(await client.increment(key, 1)).to.be.undefined
+      expect(await client.decrement(key, 1)).to.be.undefined
     })
 
     it('should alter the counter with cas', async () => {
@@ -380,7 +380,7 @@ describe('Server Adapter', () => {
       this.timeout(10000)
       this.slow(3000)
 
-      const ctr = await(client.increment(key, 1, { ttl: 1 }))
+      const ctr = await(client.increment(key, 1, { initial: 0n, ttl: 1 }))
       expect(ctr).to.eql({
         value: 0n,
         cas: ctr!.cas,
