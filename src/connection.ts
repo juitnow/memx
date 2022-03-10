@@ -4,7 +4,7 @@ import net, { Socket } from 'net'
 import { Encoder, RawOutgoingPacket } from './encode'
 import { Decoder, RawIncomingPacket } from './decode'
 import { BUFFERS, OPCODE } from './constants'
-import { socketFinalizationRegistry } from './finalization'
+import { socketFinalizationRegistry } from './internals'
 
 type RawIncomingPackets = [ RawIncomingPacket, ...RawIncomingPacket[] ]
 
