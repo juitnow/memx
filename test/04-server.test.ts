@@ -21,13 +21,6 @@ describe('Server Adapter', () => {
 
   describe('construction', () => {
     it('should construct an instance', () => {
-      const s0 = new ServerAdapter()
-      expect(s0).to.have.property('host', 'localhost')
-      expect(s0).to.have.property('port', 11211)
-      expect(s0).to.have.property('timeout', 10)
-      expect(s0).to.have.property('ttl', 0)
-      expect(s0).to.have.property('id', 'localhost:11211')
-
       const s1 = new ServerAdapter({ host: 'foo' })
       expect(s1).to.have.property('host', 'foo')
       expect(s1).to.have.property('port', 11211)

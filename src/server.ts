@@ -65,10 +65,9 @@ export class ServerAdapter implements Adapter {
 
   readonly #id!: string
 
-  constructor(options?: ServerOptions) {
+  constructor(options: ServerOptions) {
     this.#connection = new Connection(options)
     this.#ttl = options?.ttl || 0 // never
-
     this.#id = `${this.#connection.host}:${this.#connection.port}`
   }
 
