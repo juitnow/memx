@@ -21,6 +21,6 @@ report-dir: ./coverage
 produce-source-map: true
 preserve-comments: false
 exclude:
-  - src/finalization.ts
+  - src/internals.ts
   - test/**/*.*
 cache: false
