@@ -1,65 +1,41 @@
 import assert from 'assert'
-import {
-  isTypedArray,
-  isUint8Array,
-  isUint8ClampedArray,
-  isUint16Array,
-  isUint32Array,
-  isInt8Array,
-  isInt16Array,
-  isInt32Array,
-  isBigUint64Array,
-  isBigInt64Array,
-  isFloat32Array,
-  isFloat64Array,
-} from 'util/types'
+import { isTypedArray } from 'util/types'
 
 import { ClusterAdapter, ClusterOptions } from './cluster'
-import { FLAGS } from './constants'
-import { ServerAdapter } from './server'
+import { EMPTY_BUFFER, FLAGS } from './constants'
+import { typedArrayFlags } from './internals'
 import { Adapter, Counter, Stats } from './types'
 
 function toBuffer<T>(value: any, options: T): [ Buffer, T & { flags: number } ] {
+  if (Buffer.isBuffer(value)) return [ value, { ...options, flags: FLAGS.BUFFER } ]
+
   switch (typeof value) {
     case 'bigint':
       return [ Buffer.from(value.toString(), 'utf-8'), { ...options, flags: FLAGS.BIGINT } ]
+    case 'boolean':
+      return [ Buffer.alloc(1, value ? 0xff : 0x00), { ...options, flags: FLAGS.BOOLEAN } ]
+    case 'number':
+      return [ Buffer.from(value.toString(), 'utf-8'), { ...options, flags: FLAGS.NUMBER } ]
     case 'string':
       return [ Buffer.from(value, 'utf-8'), { ...options, flags: FLAGS.STRING } ]
-    case 'number':
-    case 'boolean':
-      return [ Buffer.from(JSON.stringify(value), 'utf-8'), { ...options, flags: FLAGS.STRING } ]
     case 'object':
       break // more checks below...
     default:
-      throw new TypeError(`Unable to store value of type "${typeof value}"`)
+      assert.fail(`Unable to store value of type "${typeof value}"`)
   }
 
-  if (Buffer.isBuffer(value)) {
-    return [ value, { ...options, flags: FLAGS.BUFFER } ]
-  }
-
+  // typed arrays are special
   if (isTypedArray(value)) {
-    const flags =
-      isUint8Array(value) ? FLAGS.UINT8ARRAY :
-      isUint8ClampedArray(value) ? FLAGS.UINT8CLAMPEDARRAY :
-      isUint16Array(value) ? FLAGS.UINT16ARRAY :
-      isUint32Array(value) ? FLAGS.UINT32ARRAY :
-      isInt8Array(value) ? FLAGS.INT8ARRAY :
-      isInt16Array(value) ? FLAGS.INT16ARRAY :
-      isInt32Array(value) ? FLAGS.INT32ARRAY :
-      isBigUint64Array(value) ? FLAGS.BIGUINT64ARRAY :
-      isBigInt64Array(value) ? FLAGS.BIGINT64ARRAY :
-      isFloat32Array(value) ? FLAGS.FLOAT32ARRAY :
-      isFloat64Array(value) ? FLAGS.FLOAT64ARRAY :
-      undefined
-    assert(flags, 'Unsupported kind of TypedArray')
-
+    const flags = typedArrayFlags(value)
     const buffer = Buffer.from(value.buffer, value.byteOffset, value.byteLength)
     return [ buffer, { ...options, flags } ]
   }
 
-  // here we have a typeof "object" (includes "null")... use JSON
-  return [ Buffer.from(JSON.stringify(value), 'utf-8'), { ...options, flags: FLAGS.STRING } ]
+  // null is also special...
+  if (value === null) return [ EMPTY_BUFFER, { ...options, flags: FLAGS.NULL } ]
+
+  // any other "object" gets serialized as JSON
+  return [ Buffer.from(JSON.stringify(value), 'utf-8'), { ...options, flags: FLAGS.JSON } ]
 }
 
 function makeTypedArray<T extends NodeJS.TypedArray>(
@@ -89,7 +65,7 @@ export class Client {
 
   constructor(adapterOrOptions?: Adapter | ClusterOptions) {
     if (! adapterOrOptions) {
-      this.#adapter = new ServerAdapter()
+      this.#adapter = new ClusterAdapter()
     } else if ('get' in adapterOrOptions) {
       this.#adapter = adapterOrOptions
     } else if ('hosts' in adapterOrOptions) {
@@ -99,24 +75,31 @@ export class Client {
     assert(this.#adapter, 'Invalid client constructor arguments')
   }
 
+  get adapter(): Adapter {
+    return this.#adapter
+  }
+
   async get<T extends Serializable>(key: string, options?: { ttl?: number }): Promise<ClientResult<T> | void> {
     const result = await this.#adapter.get(key, options)
     if (! result) return
-
-    new Uint8Array()
-    Uint16Array
 
     try {
       const { flags, value, cas } = result
       switch (flags) {
         case FLAGS.BIGINT:
-          return { value: BigInt(value.toString('utf-8' )) as T, cas }
+          return { value: BigInt(value.toString('utf-8')) as T, cas }
+        case FLAGS.BOOLEAN:
+          return { value: !!value[0] as T, cas }
+        case FLAGS.NUMBER:
+          return { value: Number(value.toString('utf-8' )) as T, cas }
         case FLAGS.STRING:
           return { value: value.toString('utf-8' ) as T, cas }
+
+        case FLAGS.NULL:
+          return { value: null as T, cas }
         case FLAGS.JSON:
           return { value: JSON.parse(value.toString('utf-8' )) as T, cas }
-        case FLAGS.BUFFER:
-          return { value: Buffer.from(value) as T, cas }
+
         case FLAGS.UINT8ARRAY:
           return { value: makeTypedArray(Uint8Array, value, 1) as T, cas }
         case FLAGS.UINT8CLAMPEDARRAY:
@@ -130,7 +113,7 @@ export class Client {
         case FLAGS.INT16ARRAY:
           return { value: makeTypedArray(Int16Array, value, 2) as T, cas }
         case FLAGS.INT32ARRAY:
-          return { value: makeTypedArray(Int8Array, value, 4) as T, cas }
+          return { value: makeTypedArray(Int32Array, value, 4) as T, cas }
         case FLAGS.BIGUINT64ARRAY:
           return { value: makeTypedArray(BigUint64Array, value, 8) as T, cas }
         case FLAGS.BIGINT64ARRAY:
@@ -139,27 +122,25 @@ export class Client {
           return { value: makeTypedArray(Float32Array, value, 4) as T, cas }
         case FLAGS.FLOAT64ARRAY:
           return { value: makeTypedArray(Float64Array, value, 8) as T, cas }
+
+        case FLAGS.BUFFER:
         default:
-          throw new Error(`Unsupported data type (flags=0x${flags.toString(16).padStart(8, '0')})`)
+          return { value: Buffer.from(value) as T, cas }
       }
     } finally {
       result.recycle()
     }
   }
 
-  touch(key: string, options?: { ttl?: number }): Promise<boolean> {
-    return this.#adapter.touch(key, options)
-  }
-
-  set(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
+  async set(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
     return this.#adapter.set(key, ...toBuffer(value, options))
   }
 
-  add(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
+  async add(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
     return this.#adapter.add(key, ...toBuffer(value, options))
   }
 
-  replace(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
+  async replace(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
     return this.#adapter.replace(key, ...toBuffer(value, options))
   }
 
@@ -179,20 +160,43 @@ export class Client {
     return this.#adapter.prepend(key, ...toBuffer(value, options))
   }
 
-  increment(
+  async increment(
     key: string,
     delta?: bigint | number,
-    options?: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean },
+    options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | void> {
-    return this.#adapter.increment(key, delta, options)
+    const counter = await this.#adapter.increment(key, delta, options)
+
+    if (counter && options &&
+        (options.initial !== undefined) &&
+        (counter.value === BigInt(options.initial))) {
+      const cas = await this.replace(key, counter.value, { cas: counter.cas, ttl: options.ttl })
+      counter.cas = cas ?? counter.cas
+    }
+    return counter
   }
 
-  decrement(
+  async decrement(
     key: string,
     delta?: bigint | number,
-    options?: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean },
+    options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | void> {
-    return this.#adapter.decrement(key, delta, options)
+    const counter = await this.#adapter.decrement(key, delta, options)
+
+    if (counter && options &&
+        (options.initial !== undefined) &&
+        (counter.value === BigInt(options.initial))) {
+      const cas = await this.replace(key, counter.value, { cas: counter.cas, ttl: options.ttl })
+      counter.cas = cas ?? counter.cas
+    }
+    return counter
+  }
+
+  touch(
+    key: string,
+    options?: { ttl?: number },
+  ): Promise<boolean> {
+    return this.#adapter.touch(key, options)
   }
 
   delete(

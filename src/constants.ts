@@ -1,27 +1,33 @@
 export const EMPTY_BUFFER = Buffer.alloc(0)
 
 export enum FLAGS {
-  // keep this "zero" so that "increment" and "decrement" with initial values
-  // will work... also JSON.stringify doesn't support bigint
-  BIGINT = 0x00000000,
-  // strings in JSON are escaped and quoted, so we keep them plain
-  STRING = 0x00001001,
-  // number, boolean, null and objects/arrays go the JSON way
-  JSON = 0x00001002,
-  // buffers are their own beasts...
-  BUFFER = 0x00001101,
+  // by default everything is a "buffer"
+  BUFFER = 0x00000000,
+
+  // from "typeof" we get bigint, boolean, number and string
+  BIGINT = 0xCACA0000,
+  BOOLEAN = 0xCACA0001,
+  NUMBER = 0xCACA0002,
+  STRING = 0xCACA0003,
+
+  // typeof null === object
+  NULL = 0xCACA000E,
+
+  // objects become JSON
+  JSON = 0xCACA000F,
+
   // typed arrays
-  UINT8ARRAY = 0x00002001,
-  UINT8CLAMPEDARRAY = 0x00002002,
-  UINT16ARRAY = 0x00002003,
-  UINT32ARRAY = 0x00002004,
-  INT8ARRAY = 0x00002005,
-  INT16ARRAY = 0x00002006,
-  INT32ARRAY = 0x00002007,
-  BIGUINT64ARRAY = 0x00002008,
-  BIGINT64ARRAY = 0x00002009,
-  FLOAT32ARRAY = 0x0000200A,
-  FLOAT64ARRAY = 0x0000200B,
+  UINT8ARRAY = 0xCACA0010,
+  UINT8CLAMPEDARRAY = 0xCACA0011,
+  UINT16ARRAY = 0xCACA0012,
+  UINT32ARRAY = 0xCACA0013,
+  INT8ARRAY = 0xCACA0014,
+  INT16ARRAY = 0xCACA0015,
+  INT32ARRAY = 0xCACA0016,
+  BIGUINT64ARRAY = 0xCACA0017,
+  BIGINT64ARRAY = 0xCACA0018,
+  FLOAT32ARRAY = 0xCACA0019,
+  FLOAT64ARRAY = 0xCACA001A,
 }
 
 export enum BUFFERS {
