@@ -1,7 +1,14 @@
-export * as decode from './decode'
-export * as encode from './encode'
-export * as constants from './constants'
-export * as connection from './connection'
+import * as decode from './decode'
+import * as encode from './encode'
+import * as constants from './constants'
+import * as connection from './connection'
+
+export {
+  decode,
+  encode,
+  constants,
+  connection,
+}
 
 export * from './types'
 export * from './cluster'
