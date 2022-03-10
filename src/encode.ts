@@ -1,3 +1,4 @@
+import { allocateBuffer, RecyclableBuffer } from './buffers'
 import { DATA_TYPE, EMPTY_BUFFER, MAGIC, VBUCKET, OPCODE, OFFSETS } from './constants'
 
 // Writing the full header would be like
@@ -35,7 +36,7 @@ export interface RawOutgoingPacket {
 }
 
 export class Encoder {
-  encode(buffer: Buffer, packet: RawOutgoingPacket, seq: number = 0): Buffer {
+  encode(packet: RawOutgoingPacket, seq: number = 0): RecyclableBuffer {
     const {
       opcode,
       sequence = seq,
@@ -57,7 +58,7 @@ export class Encoder {
     const bodyLength = extrasLength + keyLength + valueLength
     const length = bodyLength + CONSTANTS.HEADER_SIZE
 
-    buffer = length <= buffer.length ? buffer : Buffer.allocUnsafe(length)
+    const buffer = allocateBuffer(length) // /* length <= buffer.length ? buffer : */ Buffer.allocUnsafe(length)
 
     buffer.writeUInt8(MAGIC.REQUEST, OFFSETS.MAGIC_$8)
     buffer.writeUInt8(opcode, OFFSETS.OPCODE_$8)
@@ -75,6 +76,6 @@ export class Encoder {
     if (valueLength) pos += value.copy(buffer, pos, valueOffset, valueOffset + valueLength)
     void pos
 
-    return buffer.length === length ? buffer : buffer.subarray(0, length)
+    return buffer // .length === length ? buffer : buffer.subarray(0, length)
   }
 }
