@@ -10,7 +10,6 @@ mkdir -p build dist
 
 # Check types and generate .d.ts files
 tsc
-cp build/types/index.d.ts index.d.ts
 
 # Prep sources and tests
 esbuild --format=cjs build.ts | node -
@@ -20,6 +19,9 @@ nyc --reporter=html --reporter=text mocha 'build/test/**/*.test.js'
 
 # Run bench
 node --expose-gc ./build/test/bench.js
+
+# Extract and bundle our DTS
+api-extractor run
 
 # Lint our code
 eslint src test
