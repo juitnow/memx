@@ -309,8 +309,8 @@ export class ServerAdapter implements Adapter {
     } = options
 
     let keyOffset: number
-    keyOffset = this.#buffer.writeBigInt64BE(BigInt(delta))
-    keyOffset = this.#buffer.writeBigInt64BE(BigInt(initial), keyOffset)
+    keyOffset = this.#buffer.writeBigUInt64BE(BigInt(delta))
+    keyOffset = this.#buffer.writeBigUInt64BE(BigInt(initial), keyOffset)
     keyOffset = this.#buffer.writeUInt32BE(create ? ttl : 0xffffffff, keyOffset)
     const keyLength = this.#writeKey(key, keyOffset)
 
@@ -329,7 +329,7 @@ export class ServerAdapter implements Adapter {
       switch (response.status) {
         case STATUS.OK:
           return {
-            value: response.value.readBigInt64BE(0),
+            value: response.value.readBigUInt64BE(0),
             cas: response.cas,
           }
         case STATUS.KEY_NOT_FOUND:
