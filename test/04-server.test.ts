@@ -183,6 +183,27 @@ describe('Server Adapter', () => {
       await expect(client.get(longKey)).to.be.rejectedWith(Error, 'Key too long (len=251)')
       await expect(client.get(goodKey)).to.be.fulfilled
     })
+
+    it('should work across multiple requests in parallel', async function() {
+      this.timeout(80000)
+      this.slow(2000)
+
+      const data: [ string, Buffer ][] = []
+      for (let i = 0; i < 10000; i++) {
+        data.push([ randomBytes(16).toString('hex'), randomBytes(128) ])
+      }
+
+      const setPromises = data.map(([ key, value ]) => client.set(key, value))
+      const getPromises = data.map(([ key ]) => client.get(key))
+
+      const sets = await Promise.all(setPromises)
+      expect(sets).to.be.an('array').with.length(data.length)
+      sets.forEach((cas) => expect(cas).to.be.a('bigint'))
+
+      const gets = await Promise.all(getPromises)
+      expect(gets).to.be.an('array').with.length(data.length)
+      gets.forEach((result, i) => expect(result?.value).to.eql(data[i][1]))
+    })
   })
 
   /* ======================================================================== */
