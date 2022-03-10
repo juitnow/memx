@@ -1,5 +1,29 @@
 export const EMPTY_BUFFER = Buffer.alloc(0)
 
+export enum FLAGS {
+  // keep this "zero" so that "increment" and "decrement" with initial values
+  // will work... also JSON.stringify doesn't support bigint
+  BIGINT = 0x00000000,
+  // strings in JSON are escaped and quoted, so we keep them plain
+  STRING = 0x00001001,
+  // number, boolean, null and objects/arrays go the JSON way
+  JSON = 0x00001002,
+  // buffers are their own beasts...
+  BUFFER = 0x00001101,
+  // typed arrays
+  UINT8ARRAY = 0x00002001,
+  UINT8CLAMPEDARRAY = 0x00002002,
+  UINT16ARRAY = 0x00002003,
+  UINT32ARRAY = 0x00002004,
+  INT8ARRAY = 0x00002005,
+  INT16ARRAY = 0x00002006,
+  INT32ARRAY = 0x00002007,
+  BIGUINT64ARRAY = 0x00002008,
+  BIGINT64ARRAY = 0x00002009,
+  FLOAT32ARRAY = 0x0000200A,
+  FLOAT64ARRAY = 0x0000200B,
+}
+
 export enum BUFFERS {
   POOL_SIZE = 64,
   BUFFER_SIZE = 8192,
