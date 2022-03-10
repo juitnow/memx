@@ -58,9 +58,9 @@ describe('Cluster Adapter', () => {
         delete process.env.MEMCACHED_TIMEOUT
 
         check(new ClusterAdapter(), [
-          { host: 'host1', port: 11211, timeout: 10, ttl: 0 },
-          { host: 'host2', port: 12345, timeout: 10, ttl: 0 },
-          { host: 'host3', port: 11211, timeout: 10, ttl: 0 },
+          { host: 'host1', port: 11211, timeout: 1000, ttl: 0 },
+          { host: 'host2', port: 12345, timeout: 1000, ttl: 0 },
+          { host: 'host3', port: 11211, timeout: 1000, ttl: 0 },
         ])
 
         process.env.MEMCACHED_HOSTS = 'host1,host2'
@@ -77,7 +77,7 @@ describe('Cluster Adapter', () => {
         process.env.MEMCACHED_TTL = 'bar'
 
         check(new ClusterAdapter(), [
-          { host: 'host', port: 12345, timeout: 10, ttl: 0 },
+          { host: 'host', port: 12345, timeout: 1000, ttl: 0 },
         ])
 
         delete process.env.MEMCACHED_HOSTS
@@ -94,8 +94,8 @@ describe('Cluster Adapter', () => {
 
     it('should construct with options (hosts=string)', () => {
       check(new ClusterAdapter({ hosts: 'host1,host2:12345' }), [
-        { host: 'host1', port: 11211, timeout: 10, ttl: 0 },
-        { host: 'host2', port: 12345, timeout: 10, ttl: 0 },
+        { host: 'host1', port: 11211, timeout: 1000, ttl: 0 },
+        { host: 'host2', port: 12345, timeout: 1000, ttl: 0 },
       ])
 
       check(new ClusterAdapter({ hosts: 'host1,host2:12345', timeout: 98, ttl: 12 }), [
@@ -106,9 +106,9 @@ describe('Cluster Adapter', () => {
 
     it('should construct with options (hosts=string[])', () => {
       check(new ClusterAdapter({ hosts: [ 'host1,host2:12345', 'host3:54321' ] }), [
-        { host: 'host1', port: 11211, timeout: 10, ttl: 0 },
-        { host: 'host2', port: 12345, timeout: 10, ttl: 0 },
-        { host: 'host3', port: 54321, timeout: 10, ttl: 0 },
+        { host: 'host1', port: 11211, timeout: 1000, ttl: 0 },
+        { host: 'host2', port: 12345, timeout: 1000, ttl: 0 },
+        { host: 'host3', port: 54321, timeout: 1000, ttl: 0 },
       ])
 
       check(new ClusterAdapter({ hosts: [ 'host1,host2:12345', 'host3:54321' ], timeout: 98, ttl: 12 }), [
@@ -125,10 +125,10 @@ describe('Cluster Adapter', () => {
         { host: 'host3', timeout: 98 },
         { host: 'host4', ttl: 9 },
       ] }), [
-        { host: 'host1', port: 11211, timeout: 10, ttl: 0 },
-        { host: 'host2', port: 12345, timeout: 10, ttl: 0 },
+        { host: 'host1', port: 11211, timeout: 1000, ttl: 0 },
+        { host: 'host2', port: 12345, timeout: 1000, ttl: 0 },
         { host: 'host3', port: 11211, timeout: 98, ttl: 0 },
-        { host: 'host4', port: 11211, timeout: 10, ttl: 9 },
+        { host: 'host4', port: 11211, timeout: 1000, ttl: 9 },
       ])
 
       check(new ClusterAdapter({ hosts: [

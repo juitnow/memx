@@ -5,7 +5,7 @@ describe('Encoding Packets', () => {
   it('should encode a packet with all information required', () => {
     const encoder = new encode.Encoder()
 
-    const buffer = encoder.encode(Buffer.alloc(0), {
+    const buffer = encoder.encode({
       opcode: constants.OPCODE.QUIT,
       sequence: 0x01020304,
       cas: 0x05060708090a0b0cn,
@@ -30,7 +30,7 @@ describe('Encoding Packets', () => {
   it('should encode a packet with minimal details', () => {
     const encoder = new encode.Encoder()
 
-    const buffer = encoder.encode(Buffer.alloc(0), {
+    const buffer = encoder.encode({
       opcode: constants.OPCODE.DECREMENT,
     }, 0x01020304)
 

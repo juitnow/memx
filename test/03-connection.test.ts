@@ -20,7 +20,7 @@ describe('Connection', () => {
     const c1 = new Connection({ host: 'foo' })
     expect(c1).to.have.property('host', 'foo')
     expect(c1).to.have.property('port', 11211)
-    expect(c1).to.have.property('timeout', 10)
+    expect(c1).to.have.property('timeout', 1000)
 
     const c2 = new Connection({ host: 'bar', port: 12345, timeout: 99 })
     expect(c2).to.have.property('host', 'bar')

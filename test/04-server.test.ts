@@ -24,7 +24,7 @@ describe('Server Adapter', () => {
       const s1 = new ServerAdapter({ host: 'foo' })
       expect(s1).to.have.property('host', 'foo')
       expect(s1).to.have.property('port', 11211)
-      expect(s1).to.have.property('timeout', 10)
+      expect(s1).to.have.property('timeout', 1000)
       expect(s1).to.have.property('ttl', 0)
       expect(s1).to.have.property('id', 'foo:11211')
 
