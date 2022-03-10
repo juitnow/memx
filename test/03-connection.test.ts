@@ -1,3 +1,4 @@
+import { AssertionError } from 'assert'
 import { expect } from 'chai'
 import { connection, constants } from '../src/index'
 
@@ -16,11 +17,6 @@ describe('Connection', () => {
   const port = parseInt(process.env.MEMCACHED_PORT || '11211')
 
   it('should construct an instance', () => {
-    const c0 = new Connection()
-    expect(c0).to.have.property('host', 'localhost')
-    expect(c0).to.have.property('port', 11211)
-    expect(c0).to.have.property('timeout', 10)
-
     const c1 = new Connection({ host: 'foo' })
     expect(c1).to.have.property('host', 'foo')
     expect(c1).to.have.property('port', 11211)
@@ -31,17 +27,20 @@ describe('Connection', () => {
     expect(c2).to.have.property('port', 12345)
     expect(c2).to.have.property('timeout', 99)
 
+    expect(() => new Connection())
+        .to.throw(AssertionError, 'No options specified')
+
     expect(() => new Connection({ host: '', port: 54321 }))
-        .to.throw(Error, 'No host name specified')
+        .to.throw(AssertionError, 'No host name specified')
 
     expect(() => new Connection({ host: 'foo', port: 0 }))
-        .to.throw(Error, 'Invalid port 0')
+        .to.throw(AssertionError, 'Invalid port 0')
 
     expect(() => new Connection({ host: 'foo', port: 65536 }))
-        .to.throw(Error, 'Invalid port 65536')
+        .to.throw(AssertionError, 'Invalid port 65536')
 
     expect(() => new Connection({ host: 'foo', port: 12.34 }))
-        .to.throw(Error, 'Invalid port 12.34')
+        .to.throw(AssertionError, 'Invalid port 12.34')
   })
 
   it('should create and destroy a connection', async () => {

@@ -1,3 +1,4 @@
+import assert from 'assert'
 import net, { Socket } from 'net'
 
 import { Encoder, RawOutgoingPacket } from './encode'
@@ -61,20 +62,20 @@ export class Connection {
   readonly #host: string
   readonly #port: number
 
-  constructor(options?: ConnectionOptions)
+  constructor(options: ConnectionOptions)
   constructor(options: ConnectionOptions & { factory?: typeof net.connect }) {
+    assert(options, 'No options specified')
+
     const {
-      host = 'localhost',
+      host,
       port = 11211,
       timeout = 10,
       factory = net.connect,
-    } = options || {}
+    } = options
     this.#factory = factory
 
-    if (! host) throw new Error('No host name specified')
-    if ((port < 1) || (port > 65535) || (Math.floor(port) != port)) {
-      throw new Error(`Invalid port ${port}`)
-    }
+    assert(host, 'No host name specified')
+    assert(port > 0 && port < 65536 && (Math.floor(port) == port), `Invalid port ${port}`)
 
     this.#timeout = timeout
     this.#host = host
