@@ -138,36 +138,6 @@ describe('Connection', () => {
         .to.be.rejectedWith(Error, 'Opcode mismatch (sent=0x07, received=0x00)')
   })
 
-  // it('should fail when the status is faulty', async () => {
-  //   const connection = new Connection({ host, port, factory: (options: any): any => {
-  //     return new class extends FakeSocket {
-  //       $write(string: string, callback: (error?: Error) => void): void {
-  //         expect(string).to.equal('800700000000000000000000000000010000000000000000')
-  //         this.$respond('81070000000000010000000d00000001000000000000000048656c6c6f2c20776f726c6421')
-  //         callback()
-  //       }
-  //     }(options)
-  //   } })
-
-  //   await expect(connection.send({ opcode: constants.OPCODE.QUIT }))
-  //       .to.be.rejectedWith(Error, '[KEY_NOT_FOUND] Hello, world!')
-  // })
-
-  // it('should fail when the status is unknown', async () => {
-  //   const connection = new Connection({ host, port, factory: (options: any): any => {
-  //     return new class extends FakeSocket {
-  //       $write(string: string, callback: (error?: Error) => void): void {
-  //         expect(string).to.equal('800700000000000000000000000000010000000000000000')
-  //         this.$respond('810700000000012300000000000000010000000000000000')
-  //         callback()
-  //       }
-  //     }(options)
-  //   } })
-
-  //   await expect(connection.send({ opcode: constants.OPCODE.QUIT }))
-  //       .to.be.rejectedWith(Error, '[UNKNOWN 0x0123] Unknown Error')
-  // })
-
   it('should handle multiple packets for "stat"', async () => {
     const connection = new Connection({ host, port, factory: (options: any): any => {
       return new class extends FakeSocket {
