@@ -61,9 +61,14 @@ export class Connection {
   readonly #host: string
   readonly #port: number
 
-  constructor(options: ConnectionOptions)
+  constructor(options?: ConnectionOptions)
   constructor(options: ConnectionOptions & { factory?: typeof net.connect }) {
-    const { host, port = 11211, timeout = 10, factory = net.connect } = options
+    const {
+      host = 'localhost',
+      port = 11211,
+      timeout = 10,
+      factory = net.connect,
+    } = options || {}
     this.#factory = factory
 
     if (! host) throw new Error('No host name specified')

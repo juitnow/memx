@@ -6,7 +6,7 @@ import { connection, constants } from '../src/index'
 import { FakeSocket } from './fake-socket'
 
 const Connection = connection.Connection as {
-  new (options: any): connection.Connection
+  new (options?: any): connection.Connection
 }
 
 /* ========================================================================== */
@@ -16,6 +16,11 @@ describe('Connection', () => {
   const port = parseInt(process.env.MEMCACHED_PORT || '11211')
 
   it('should construct an instance', () => {
+    const c0 = new Connection()
+    expect(c0).to.have.property('host', 'localhost')
+    expect(c0).to.have.property('port', 11211)
+    expect(c0).to.have.property('timeout', 10)
+
     const c1 = new Connection({ host: 'foo' })
     expect(c1).to.have.property('host', 'foo')
     expect(c1).to.have.property('port', 11211)
