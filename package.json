@@ -1,7 +1,7 @@
 {
-  "name": "memcached",
+  "name": "memx",
   "version": "0.0.1",
-  "description": "My own take on a Memcached client",
+  "description": "Simple and fast memcached client",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "exports": {
