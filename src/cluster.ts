@@ -75,43 +75,43 @@ export class ClusterAdapter implements Adapter {
     return this.servers[hash % this.servers.length]
   }
 
-  get(key: string, options?: { ttl?: number | undefined }): Promise<void | AdapterResult> {
+  get(key: string, options?: { ttl?: number }): Promise<void | AdapterResult> {
     return this.server(key).get(key, options)
   }
 
-  touch(key: string, options?: { ttl?: number | undefined }): Promise<boolean> {
+  touch(key: string, options?: { ttl?: number }): Promise<boolean> {
     return this.server(key).touch(key, options)
   }
 
-  set(key: string, value: Buffer, options?: { flags?: number | undefined; cas?: bigint | undefined; ttl?: number | undefined }): Promise<bigint | void> {
+  set(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | void> {
     return this.server(key).set(key, value, options)
   }
 
-  add(key: string, value: Buffer, options?: { flags?: number | undefined; cas?: bigint | undefined; ttl?: number | undefined }): Promise<bigint | void> {
+  add(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | void> {
     return this.server(key).add(key, value, options)
   }
 
-  replace(key: string, value: Buffer, options?: { flags?: number | undefined; cas?: bigint | undefined; ttl?: number | undefined }): Promise<bigint | void> {
+  replace(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | void> {
     return this.server(key).replace(key, value, options)
   }
 
-  append(key: string, value: Buffer, options?: { cas?: bigint | undefined }): Promise<boolean> {
+  append(key: string, value: Buffer, options?: { cas?: bigint }): Promise<boolean> {
     return this.server(key).append(key, value, options)
   }
 
-  prepend(key: string, value: Buffer, options?: { cas?: bigint | undefined }): Promise<boolean> {
+  prepend(key: string, value: Buffer, options?: { cas?: bigint }): Promise<boolean> {
     return this.server(key).prepend(key, value, options)
   }
 
-  increment(key: string, delta?: number | bigint, options?: { initial?: number | bigint | undefined; cas?: bigint | undefined; ttl?: number | undefined; create?: boolean | undefined }): Promise<void | Counter> {
+  increment(key: string, delta?: number | bigint, options?: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean }): Promise<void | Counter> {
     return this.server(key).increment(key, delta, options)
   }
 
-  decrement(key: string, delta?: number | bigint, options?: { initial?: number | bigint | undefined; cas?: bigint | undefined; ttl?: number | undefined; create?: boolean | undefined }): Promise<void | Counter> {
+  decrement(key: string, delta?: number | bigint, options?: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean }): Promise<void | Counter> {
     return this.server(key).decrement(key, delta, options)
   }
 
-  delete(key: string, options?: { cas?: bigint | undefined }): Promise<boolean> {
+  delete(key: string, options?: { cas?: bigint }): Promise<boolean> {
     return this.server(key).delete(key, options)
   }
 
