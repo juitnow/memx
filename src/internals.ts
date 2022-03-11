@@ -39,3 +39,8 @@ export function typedArrayFlags(value: NodeJS.TypedArray): FLAGS {
     assert.fail('Unsupported kind of TypedArray')
   return flags
 }
+
+export function assertPromise(promise: Promise<any>, message: string): void {
+  // eslint-disable-next-line no-console
+  promise.catch((error) => console.log(message, error))
+}
