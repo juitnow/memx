@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { randomBytes } from 'crypto'
-import { Bundle, Client, Factory } from '../src/index'
+import { Bundle, Client, Factory, PoorManLock } from '../src/index'
 
 describe('Utilities', () => {
   const host = process.env.MEMCACHED_HOST || '127.0.0.1'
@@ -171,6 +171,113 @@ describe('Utilities', () => {
 
       expect(await bundle.get('foo')).to.equal('this is foo')
       expect(await bundle.get('bar')).to.be.undefined
+    })
+  })
+
+  describe('poor man lock', () => {
+    it('should lock', async function() {
+      this.timeout(3000)
+      this.slow(2000)
+
+      const lock = new PoorManLock(client, key)
+      const record: string[] = []
+
+      expect((await client.get(key))?.value).to.be.undefined
+
+      record.push('create 1')
+      const p1 = lock.execute(async () => {
+        expect((await client.get(key))?.value).to.be.false // "anonymous"
+
+        record.push('start 1')
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        record.push('end 1')
+
+        expect((await client.get(key))?.value).to.be.false // "anonymous"
+      })
+
+      record.push('create 2')
+      const p2 = lock.execute(async () => {
+        expect((await client.get(key))?.value).to.equal('foo') // owner "foo"
+        record.push('execute 2')
+      }, { owner: 'foo', timeout: 2000 })
+
+      await Promise.allSettled([ p1, p2 ])
+
+      // lock should be cleared
+      expect((await client.get(key))?.value).to.be.undefined
+      expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1', 'execute 2' ])
+    })
+
+    it('should timeout while acquiring an anonymous lock', async function() {
+      this.timeout(3000)
+      this.slow(2000)
+
+      const lock = new PoorManLock(client, key)
+      const record: string[] = []
+
+      expect((await client.get(key))?.value).to.be.undefined
+
+      record.push('create 1')
+      const p1 = lock.execute(async () => {
+        expect((await client.get(key))?.value).to.be.false // anonymous
+
+        record.push('start 1')
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        record.push('end 1')
+
+        expect((await client.get(key))?.value).to.be.false // anonymous
+
+        return 'hello, world!'
+      })
+
+      record.push('create 2')
+      const p2 = lock.execute(async () => {
+        record.push('execute 2')
+      }, { timeout: 500 })
+
+      await Promise.allSettled([ p1, p2 ])
+
+      expect(await p1).to.equal('hello, world!')
+      await expect(p2).to.be.rejectedWith(Error, `Lock "${key}" timeout (owner=anonymous)`)
+
+      expect((await client.get(key))?.value).to.be.undefined
+      expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
+    })
+
+    it('should timeout while acquiring a named lock', async function() {
+      this.timeout(3000)
+      this.slow(2000)
+
+      const lock = new PoorManLock(client, key)
+      const record: string[] = []
+
+      expect((await client.get(key))?.value).to.be.undefined
+
+      record.push('create 1')
+      const p1 = lock.execute(async () => {
+        expect((await client.get(key))?.value).to.equal('foobar') // owner "foobar"
+
+        record.push('start 1')
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        record.push('end 1')
+
+        expect((await client.get(key))?.value).to.equal('foobar') // owner "foobar"
+
+        return 'hello, world!'
+      }, { owner: 'foobar' })
+
+      record.push('create 2')
+      const p2 = lock.execute(async () => {
+        record.push('execute 2')
+      }, { timeout: 500 })
+
+      await Promise.allSettled([ p1, p2 ])
+
+      expect(await p1).to.equal('hello, world!')
+      await expect(p2).to.be.rejectedWith(Error, `Lock "${key}" timeout (owner="foobar")`)
+
+      expect((await client.get(key))?.value).to.be.undefined
+      expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
     })
   })
 })
