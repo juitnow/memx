@@ -57,7 +57,6 @@ function toBuffer<T>(value: any, options: T): [ Buffer, T & { flags: number } ] 
 
   // any other "object" gets serialized as JSON
   const json = JSON.stringify(value, replacer)
-  console.log('JSON', json)
   return [ Buffer.from(json, 'utf-8'), { ...options, flags: FLAGS.JSON } ]
 }
 
