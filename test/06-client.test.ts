@@ -222,13 +222,15 @@ describe('Memcached Client', () => {
         value: 124n,
         cas: cas2,
       })
+
+      expect(await client.increment(key, 1, { initial: 999, cas: cas2 + 10n })).to.be.undefined
     })
 
     it('should increment a value modified by a race condition', async () => {
       process.nextTick(() => client.set(key, 'foobar'))
       const promise = client.increment(key, 1, { initial: 123 }) as any
 
-      const { cas, value } = await promise
+      const { cas, value } = await promise || {}
 
       expect(cas).to.be.a('bigint')
       expect(value).to.be.a('bigint')
@@ -256,6 +258,8 @@ describe('Memcached Client', () => {
         value: 122n,
         cas: cas2,
       })
+
+      expect(await client.decrement(key, 1, { initial: 999, cas: cas2 + 10n })).to.be.undefined
     })
 
     it('should decrement a value modified by a race condition', async () => {
