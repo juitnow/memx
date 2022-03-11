@@ -40,7 +40,7 @@ export function typedArrayFlags(value: NodeJS.TypedArray): FLAGS {
   return flags
 }
 
-export function assertPromise(promise: Promise<any>, message: string): void {
+export function logPromiseError(promise: Promise<any>, message: string): Promise<void> {
   // eslint-disable-next-line no-console
-  promise.catch((error) => console.log(message, error))
+  return promise.catch((error) => console.log(message, error)).then(() => void 0)
 }
