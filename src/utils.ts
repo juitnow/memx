@@ -116,31 +116,36 @@ export class PoorManLock {
     this.#name = name
   }
 
-  async execute<T>(f: () => T | Promise<T>, options?: { timeout?: number, owner?: string }): Promise<T> {
-    const { timeout = 1000, owner = false } = options || {}
+  async execute<T>(
+    executor: () => T | Promise<T>,
+    options?: { timeout?: number, owner?: string },
+  ): Promise<T> {
+    const { timeout = 5000, owner = false } = options || {}
     const end = Date.now() + timeout
 
     let cas: bigint | undefined
     do {
-      cas = await this.#client.add(this.#name, owner, { ttl: 1 })
+      cas = await this.#client.add(this.#name, owner, { ttl: 2 })
       if (cas !== undefined) break
       await new Promise((resolve) => setTimeout(resolve, 100))
     } while (Date.now() < end)
 
     if (cas === undefined) {
-      const other = (await this.#client.get(this.#name))?.value
-      const owner = other ? `"${other}"` : 'anonymous'
-      throw new Error(`Lock "${this.#client.prefix}${this.#name}" timeut (owner=${owner})`)
+      const other = await this.#client.get(this.#name)
+      const owner = (other && other.value) ? `"${other.value}"` : 'anonymous'
+      throw new Error(`Lock "${this.#client.prefix}${this.#name}" timeout (owner=${owner})`)
     }
 
-    const interval = setInterval(async () => {
-      void logPromiseError(
-          this.#client.replace(this.#name, owner, { ttl: 1, cas }),
-          `Error extending lock "${this.#client.prefix}${this.#name}"`)
+    const interval = setInterval(() => {
+      void logPromiseError((async (): Promise<void> => {
+        const replaced = await this.#client.replace(this.#name, owner, { ttl: 2, cas })
+        assert(replaced !== undefined, `Lock "${this.#client.prefix}${this.#name}" not replaced`)
+        cas = replaced
+      })(), `Error extending lock "${this.#client.prefix}${this.#name}"`)
     }, 100)
 
     try {
-      return await f()
+      return await executor()
     } finally {
       clearInterval(interval)
       await logPromiseError(
