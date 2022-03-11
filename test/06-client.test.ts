@@ -87,6 +87,88 @@ describe('Memcached Client', () => {
     })
   })
 
+  describe('extra data types', () => {
+    it('date', async () => {
+      const date = new Date()
+
+      await client.set(key, new Date(date))
+
+      const result = await client.get<Date>(key)
+      expect(result?.value).to.eql(date)
+    })
+
+    it('date (json)', async () => {
+      const date = new Date()
+
+      await client.set(key, { date, test: 'foobar' })
+
+      const result = await client.get(key)
+      expect(result?.value).to.eql({ date, test: 'foobar' })
+    })
+
+    it('set', async () => {
+      const set = new Set([ 'a', 'b', 'c' ])
+
+      await client.set(key, set)
+
+      const result = await client.get(key)
+      expect(result?.value).to.eql(set)
+    })
+
+    it('set (json)', async () => {
+      const set = new Set([ 'a', 'b', 'c' ])
+
+      await client.set(key, { set, test: 'foobar' })
+
+      const result = await client.get(key)
+      expect(result?.value).to.eql({ set, test: 'foobar' })
+    })
+
+    it('map', async () => {
+      const map = new Map().set('foo', 'bar').set('baz', 12345)
+
+      await client.set(key, map)
+
+      const result = await client.get(key)
+      expect(result?.value).to.eql(map)
+    })
+
+    it('map (json)', async () => {
+      const map = new Map().set('foo', 'bar').set('baz', 12345)
+
+      await client.set(key, { map, test: 'foobar' })
+
+      const result = await client.get(key)
+      expect(result?.value).to.eql({ map, test: 'foobar' })
+    })
+
+    it('bigint (json)', async () => {
+      const value = -12345678901234567890n
+
+      await client.set(key, { value, test: 'foobar' })
+
+      const result = await client.get(key)
+      expect(result?.value).to.eql({ value, test: 'foobar' })
+    })
+
+    it('date/map/set/bigint json', async () => {
+      const date = new Date()
+      const value = -12345678901234567890n
+      const map = new Map()
+          .set('set', new Set([ '1', 2, date, value ]))
+          .set('map', new Map<any, any>([ [ 'a', '1' ], [ 'b', 2 ], [ 'c', date ], [ 'd', value ] ]))
+          .set('date', date)
+          .set('value', value)
+          .set('test', 'foobar')
+      const set = new Set([ 'a', 123 ])
+
+      await client.set(key, { map, set, date, value })
+
+      const result = await client.get(key)
+      expect(result?.value).to.eql({ map, set, date, value })
+    })
+  })
+
   describe('buffers and typed arrays', () => {
     const buffer = randomBytes(128)
 
@@ -341,6 +423,10 @@ describe('Memcached Client', () => {
 
   describe('prefixes', () => {
     const prefixed = client.withPrefix('foo:')
+
+    it('should expose the prefix', () => {
+      expect(prefixed.prefix).to.equal('foo:')
+    })
 
     it('get/set (1)', async () => {
       await prefixed.set(key, 'foobar')
