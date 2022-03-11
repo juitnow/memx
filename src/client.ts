@@ -115,7 +115,7 @@ export class Client {
     return client
   }
 
-  async get<T extends Serializable>(key: string, options?: { ttl?: number }): Promise<ClientResult<T> | void> {
+  async get<T extends Serializable>(key: string, options?: { ttl?: number }): Promise<ClientResult<T> | undefined> {
     const result = await this.#adapter.get(this.#prefix + key, options)
     if (! result) return
 
@@ -168,15 +168,15 @@ export class Client {
     }
   }
 
-  async set(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
+  async set(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | undefined> {
     return this.#adapter.set(this.#prefix + key, ...toBuffer(value, options))
   }
 
-  async add(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
+  async add(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | undefined> {
     return this.#adapter.add(this.#prefix + key, ...toBuffer(value, options))
   }
 
-  async replace(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | void> {
+  async replace(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | undefined> {
     return this.#adapter.replace(this.#prefix + key, ...toBuffer(value, options))
   }
 
@@ -200,7 +200,7 @@ export class Client {
     key: string,
     delta?: bigint | number,
     options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
-  ): Promise<Counter | void> {
+  ): Promise<Counter | undefined> {
     const counter = await this.#adapter.increment(this.#prefix + key, delta, options)
 
     if ((options?.initial !== undefined) && (counter?.value === BigInt(options.initial))) {
@@ -214,7 +214,7 @@ export class Client {
     key: string,
     delta?: bigint | number,
     options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
-  ): Promise<Counter | void> {
+  ): Promise<Counter | undefined> {
     const counter = await this.#adapter.decrement(this.#prefix + key, delta, options)
 
     if ((options?.initial !== undefined) && (counter?.value === BigInt(options.initial))) {

@@ -110,7 +110,7 @@ export class ServerAdapter implements Adapter {
   async get(
     key: string,
     options: { ttl?: number } = {},
-  ): Promise<AdapterResult | void> {
+  ): Promise<AdapterResult | undefined> {
     const { ttl } = options
 
     let keyOffset = 0
@@ -182,7 +182,7 @@ export class ServerAdapter implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<bigint | void> {
+  ): Promise<bigint | undefined> {
     const { flags = 0, cas = 0n, ttl = this.#ttl } = options
 
     let keyOffset: number
@@ -221,7 +221,7 @@ export class ServerAdapter implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number } = {},
-  ): Promise<bigint | void> {
+  ): Promise<bigint | undefined> {
     return this.#sar(OPCODE.SET, key, value, options)
   }
 
@@ -229,7 +229,7 @@ export class ServerAdapter implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number } = {},
-  ): Promise<bigint | void> {
+  ): Promise<bigint | undefined> {
     return this.#sar(OPCODE.ADD, key, value, options)
   }
 
@@ -237,7 +237,7 @@ export class ServerAdapter implements Adapter {
     key: string,
     value: Buffer,
     options: { flags?: number, cas?: bigint, ttl?: number } = {},
-  ): Promise<bigint | void> {
+  ): Promise<bigint | undefined> {
     return this.#sar(OPCODE.REPLACE, key, value, options)
   }
 
@@ -300,7 +300,7 @@ export class ServerAdapter implements Adapter {
     key: string,
     delta: bigint | number,
     options: { initial?: bigint | number, cas?: bigint, ttl?: number },
-  ): Promise<Counter | void> {
+  ): Promise<Counter | undefined> {
     const {
       initial,
       cas = 0n,
@@ -346,7 +346,7 @@ export class ServerAdapter implements Adapter {
     key: string,
     delta: bigint | number = 1,
     options: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean } = {},
-  ): Promise<Counter | void> {
+  ): Promise<Counter | undefined> {
     return this.#counter(OPCODE.INCREMENT, key, delta, options)
   }
 
@@ -354,7 +354,7 @@ export class ServerAdapter implements Adapter {
     key: string,
     delta: bigint | number = 1,
     options: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean } = {},
-  ): Promise<Counter | void> {
+  ): Promise<Counter | undefined> {
     return this.#counter(OPCODE.DECREMENT, key, delta, options)
   }
 

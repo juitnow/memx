@@ -75,7 +75,7 @@ export class ClusterAdapter implements Adapter {
     return this.servers[hash % this.servers.length]
   }
 
-  get(key: string, options?: { ttl?: number }): Promise<void | AdapterResult> {
+  get(key: string, options?: { ttl?: number }): Promise<AdapterResult | undefined> {
     return this.server(key).get(key, options)
   }
 
@@ -83,15 +83,15 @@ export class ClusterAdapter implements Adapter {
     return this.server(key).touch(key, options)
   }
 
-  set(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | void> {
+  set(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | undefined> {
     return this.server(key).set(key, value, options)
   }
 
-  add(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | void> {
+  add(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | undefined> {
     return this.server(key).add(key, value, options)
   }
 
-  replace(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | void> {
+  replace(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | undefined> {
     return this.server(key).replace(key, value, options)
   }
 
@@ -103,11 +103,11 @@ export class ClusterAdapter implements Adapter {
     return this.server(key).prepend(key, value, options)
   }
 
-  increment(key: string, delta?: number | bigint, options?: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean }): Promise<void | Counter> {
+  increment(key: string, delta?: number | bigint, options?: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean }): Promise<Counter | undefined> {
     return this.server(key).increment(key, delta, options)
   }
 
-  decrement(key: string, delta?: number | bigint, options?: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean }): Promise<void | Counter> {
+  decrement(key: string, delta?: number | bigint, options?: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean }): Promise<Counter | undefined> {
     return this.server(key).decrement(key, delta, options)
   }
 

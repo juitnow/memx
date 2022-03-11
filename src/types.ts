@@ -197,7 +197,7 @@ export interface Adapter {
   get(
     key: string,
     options?: { ttl?: number },
-  ): Promise<AdapterResult | void>
+  ): Promise<AdapterResult | undefined>
 
   touch(
     key: string,
@@ -208,19 +208,19 @@ export interface Adapter {
     key: string,
     value: Buffer,
     options?: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<bigint | void>
+  ): Promise<bigint | undefined>
 
   add(
     key: string,
     value: Buffer,
     options?: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<bigint | void>
+  ): Promise<bigint | undefined>
 
   replace(
     key: string,
     value: Buffer,
     options?: { flags?: number, cas?: bigint, ttl?: number },
-  ): Promise<bigint | void>
+  ): Promise<bigint | undefined>
 
   append(
     key: string,
@@ -238,13 +238,13 @@ export interface Adapter {
     key: string,
     delta?: bigint | number,
     options?: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean },
-  ): Promise<Counter | void>
+  ): Promise<Counter | undefined>
 
   decrement(
     key: string,
     delta?: bigint | number,
     options?: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean },
-  ): Promise<Counter | void>
+  ): Promise<Counter | undefined>
 
   delete(
     key: string,
