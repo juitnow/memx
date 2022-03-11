@@ -103,3 +103,42 @@ export class Bundle<T extends Serializable = Serializable> {
     return results
   }
 }
+
+// export class PoorManLock {
+//   #client: Client
+//   #name: string
+//   #ttl: number
+
+//   constructor(client: Client, name: string, ttl?: number) {
+//     assert(client, 'No client specified')
+//     assert(name, 'No lock name specified')
+
+//     this.#client = client
+//     this.#name = name
+//     this.#ttl = ttl || 0
+//   }
+
+//   async execute<T>(f: () => T | Promise<T>): Promise<T> {
+//     const end = Date.now() + (this.#ttl * 1000)
+
+//     let cas: bigint | void
+//     while (Date.now() < end) {
+//       cas = await this.#client.add(this.#name, 'locked')
+//       if (cas !== undefined) break
+//       await new Promise((resolve) => setTimeout(resolve, 100))
+//     }
+
+//     if (cas === undefined) throw new Error('TIMEOUT!')
+
+//     const interval = setInterval(() => {
+//       void logPromiseError(this.#client.touch(this.#name, { ttl: this.#ttl, cas }), 'Foo')
+//     }, 1000)
+
+//     try {
+//       return await f()
+//     } finally {
+//       clearInterval(interval)
+//       await logPromiseError(this.#client.delete(this.#name, { cas }), `Unable to delete lock "${this.#name}"`)
+//     }
+//   }
+// }
