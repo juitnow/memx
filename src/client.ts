@@ -6,6 +6,27 @@ import { EMPTY_BUFFER, FLAGS } from './constants'
 import { typedArrayFlags } from './internals'
 import { Adapter, Counter, Stats } from './types'
 
+function replacer(this: any, key: string, value: any): any {
+  if (typeof this[key] === 'bigint') return [ '\0__$BIGINT$__\0', this[key].toString() ]
+  if (this[key] instanceof Date) return [ '\0__$DATE$__\0', this[key].toISOString() ]
+  if (this[key] instanceof Set) return [ '\0__$SET$__\0', ...value ]
+  if (this[key] instanceof Map) return [ '\0__$MAP$__\0', ...value.entries() ]
+  return value
+}
+
+function reviver(this: any, key: string, value: any): any {
+  if (Array.isArray(value)) {
+    switch (value[0]) {
+      case '\0__$BIGINT$__\0': return BigInt(value[1])
+      case '\0__$DATE$__\0': return new Date(value[1])
+      case '\0__$SET$__\0': return new Set(value.slice(1))
+      case '\0__$MAP$__\0': return new Map(value.slice(1))
+    }
+  }
+  return value
+}
+
+
 function toBuffer<T>(value: any, options: T): [ Buffer, T & { flags: number } ] {
   if (Buffer.isBuffer(value)) return [ value, { ...options, flags: FLAGS.BUFFER } ]
 
@@ -35,7 +56,9 @@ function toBuffer<T>(value: any, options: T): [ Buffer, T & { flags: number } ] 
   if (value === null) return [ EMPTY_BUFFER, { ...options, flags: FLAGS.NULL } ]
 
   // any other "object" gets serialized as JSON
-  return [ Buffer.from(JSON.stringify(value), 'utf-8'), { ...options, flags: FLAGS.JSON } ]
+  const json = JSON.stringify(value, replacer)
+  console.log('JSON', json)
+  return [ Buffer.from(json, 'utf-8'), { ...options, flags: FLAGS.JSON } ]
 }
 
 function makeTypedArray<T extends NodeJS.TypedArray>(
@@ -82,6 +105,10 @@ export class Client {
     return this.#adapter
   }
 
+  get prefix(): string {
+    return this.#prefix
+  }
+
   withPrefix(prefix: string): Client {
     assert(prefix, 'Invalid prefix')
     const client = new Client(this.#adapter)
@@ -108,7 +135,7 @@ export class Client {
         case FLAGS.NULL:
           return { value: null as T, cas }
         case FLAGS.JSON:
-          return { value: JSON.parse(value.toString('utf-8' )) as T, cas }
+          return { value: JSON.parse(value.toString('utf-8' ), reviver) as T, cas }
 
         case FLAGS.UINT8ARRAY:
           return { value: makeTypedArray(Uint8Array, value, 1) as T, cas }
