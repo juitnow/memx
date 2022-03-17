@@ -144,11 +144,11 @@ export class ServerAdapter implements Adapter {
 
   async touch(
     key: string,
-    options: { ttl?: number } = {},
+    ttl?: number,
   ): Promise<boolean> {
-    const { ttl = this.#ttl } = options
+    const timeToLive = ttl === undefined ? this.#ttl : ttl
 
-    const keyOffset = this.#buffer.writeUInt32BE(ttl)
+    const keyOffset = this.#buffer.writeUInt32BE(timeToLive)
     const keyLength = this.#writeKey(key, keyOffset)
 
     const [ response ] = await this.#connection.send({

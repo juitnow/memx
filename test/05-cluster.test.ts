@@ -164,8 +164,8 @@ describe('Cluster Adapter', () => {
         { touch: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.touch('foo', { ttl: 100 })).to.eql([ 1, 'foo', { ttl: 100 } ])
-      expect(await cluster.touch('bar', { ttl: 100 })).to.eql([ 2, 'bar', { ttl: 100 } ])
+      expect(await cluster.touch('foo', 100)).to.eql([ 1, 'foo', 100 ])
+      expect(await cluster.touch('bar', 100)).to.eql([ 2, 'bar', 100 ])
     })
 
     it('set', async () => {

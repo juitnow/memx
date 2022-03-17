@@ -391,7 +391,7 @@ describe('Memcached Client', () => {
     } as Adapter)
 
     it('touch', () => {
-      expect(client.touch('key', { ttl: 123 })).to.eql([ 'touch', 'key', { ttl: 123 } ])
+      expect(client.touch('key', 123)).to.eql([ 'touch', 'key', 123 ])
     })
 
     it('delete', () => {
@@ -477,7 +477,7 @@ describe('Memcached Client', () => {
 
       await client.set('foo:' + key, 'foobar')
 
-      expect((await prefixed.touch(key, { ttl: 1 }))).to.be.true
+      expect((await prefixed.touch(key, 1))).to.be.true
       expect((await client.get('foo:' + key))?.value).to.equal('foobar')
 
       await new Promise((resolve) => setTimeout(resolve, 2000))

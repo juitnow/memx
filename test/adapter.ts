@@ -114,12 +114,12 @@ export function adapterTests(client: Adapter): void {
       this.timeout(10000)
       this.slow(3000)
 
-      expect(await client.touch(key, { ttl: 1 })).to.eql(false)
+      expect(await client.touch(key, 1)).to.eql(false)
 
       const cas = await client.set(key, value)
       expect(cas).to.be.a('bigint')
 
-      expect(await client.touch(key, { ttl: 1 })).to.eql(true)
+      expect(await client.touch(key, 1)).to.eql(true)
       expect(await client.get(key)).excluding('recycle').to.eql({
         value,
         flags: 0,

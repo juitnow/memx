@@ -51,7 +51,7 @@ export class Bundle<T extends Serializable = Serializable> {
       const added = await this.#client.add(this.#name, key, { ttl: this.#ttl })
       if (!added) {
         await this.#client.append(this.#name, `\0${key}`)
-        await this.#client.touch(this.#name, { ttl: this.#ttl })
+        await this.#client.touch(this.#name, this.#ttl)
       }
     })(), `Bundle "${this.#client.prefix}${this.#name}" error recording key "${key}"`)
   }

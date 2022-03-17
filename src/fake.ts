@@ -62,10 +62,10 @@ export class FakeAdapter implements Adapter {
 
   async touch(
     key: string,
-    options: { ttl?: number } = {},
+    ttl: number,
   ): Promise<boolean> {
     const entry = this.#get(key)
-    if (entry) entry.exp = toExp(options.ttl)
+    if (entry) entry.exp = toExp(ttl)
     return !! entry
   }
 

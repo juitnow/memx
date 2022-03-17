@@ -251,9 +251,9 @@ export class Client {
 
   touch(
     key: string,
-    options?: { ttl?: number },
+    ttl?: number,
   ): Promise<boolean> {
-    return this.#adapter.touch(this.#prefix + key, options)
+    return this.#adapter.touch(this.#prefix + key, ttl)
   }
 
   delete(

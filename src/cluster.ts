@@ -79,8 +79,8 @@ export class ClusterAdapter implements Adapter {
     return this.server(key).get(key, options)
   }
 
-  touch(key: string, options?: { ttl?: number }): Promise<boolean> {
-    return this.server(key).touch(key, options)
+  touch(key: string, ttl?: number): Promise<boolean> {
+    return this.server(key).touch(key, ttl)
   }
 
   set(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | undefined> {

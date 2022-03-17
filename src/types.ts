@@ -201,7 +201,7 @@ export interface Adapter {
 
   touch(
     key: string,
-    options?: { ttl?: number },
+    ttl?: number,
   ): Promise<boolean>
 
   set(
