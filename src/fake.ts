@@ -30,7 +30,6 @@ export class FakeAdapter implements Adapter {
   }
 
   #set(key: string, value: Buffer, flags?: number, ttl?: number): bigint {
-    if (key.length > 250) throw new TypeError(`Key too long (len=${key.length})`)
     this.#cache.set(key, {
       value: value,
       flags: flags || 0,
@@ -74,9 +73,9 @@ export class FakeAdapter implements Adapter {
     value: Buffer,
     options: { flags?: number; cas?: bigint; ttl?: number } = {},
   ): Promise<bigint | undefined> {
-    if (options.cas !== undefined) {
-      const entry = this.#get(key)
-      if (entry?.cas !== options.cas) return
+    const entry = this.#get(key)
+    if (entry && (options.cas !== undefined) && (entry.cas !== options.cas)) {
+      return
     }
 
     return this.#set(key, value, options.flags, options.ttl)
@@ -176,9 +175,9 @@ export class FakeAdapter implements Adapter {
     key: string,
     options: { cas?: bigint } = {},
   ): Promise<boolean> {
-    if (options.cas !== undefined) {
-      const entry = this.#get(key)
-      if (entry?.cas !== options.cas) return false
+    const entry = this.#get(key)
+    if (entry && (options.cas !== undefined) && (entry.cas !== options.cas)) {
+      return false
     }
 
     return this.#cache.delete(key)
