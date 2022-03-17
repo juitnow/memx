@@ -58,7 +58,7 @@ export class Encoder {
     const bodyLength = extrasLength + keyLength + valueLength
     const length = bodyLength + CONSTANTS.HEADER_SIZE
 
-    const buffer = allocateBuffer(length) // /* length <= buffer.length ? buffer : */ Buffer.allocUnsafe(length)
+    const buffer = allocateBuffer(length)
 
     buffer.writeUInt8(MAGIC.REQUEST, OFFSETS.MAGIC_$8)
     buffer.writeUInt8(opcode, OFFSETS.OPCODE_$8)
