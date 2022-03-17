@@ -6,6 +6,7 @@ import { EMPTY_BUFFER, FLAGS } from './constants'
 import { typedArrayFlags } from './internals'
 import { Adapter, Counter, Stats } from './types'
 
+/** JSON replacere function serializing `bigint`, {@link Date}, {@link Set} and {@link Map}. */
 function replacer(this: any, key: string, value: any): any {
   if (typeof this[key] === 'bigint') return [ '\0__$BIGINT$__\0', this[key].toString() ]
   if (this[key] instanceof Date) return [ '\0__$DATE$__\0', this[key].toISOString() ]
@@ -14,6 +15,7 @@ function replacer(this: any, key: string, value: any): any {
   return value
 }
 
+/** JSON reviver function deserializing `bigint`, {@link Date}, {@link Set} and {@link Map}. */
 function reviver(this: any, key: string, value: any): any {
   if (Array.isArray(value)) {
     switch (value[0]) {
@@ -26,8 +28,8 @@ function reviver(this: any, key: string, value: any): any {
   return value
 }
 
-
-function toBuffer<T>(value: any, options: T): [ Buffer, T & { flags: number } ] {
+/** Convert a {@link Serializable} or {@link Appendable} value into a {@link Buffer}. */
+function toBuffer<T>(value: Serializable | Appendable, options: T): [ Buffer, T & { flags: number } ] {
   if (Buffer.isBuffer(value)) return [ value, { ...options, flags: FLAGS.BUFFER } ]
 
   switch (typeof value) {
@@ -60,30 +62,50 @@ function toBuffer<T>(value: any, options: T): [ Buffer, T & { flags: number } ] 
   return [ Buffer.from(json, 'utf-8'), { ...options, flags: FLAGS.JSON } ]
 }
 
+/** Node's own types doesn't provide this... Make our own */
+type TypedArrayConstructor<T extends NodeJS.TypedArray> = {
+  new (buffer: ArrayBuffer, offset?: number, length?: number): T
+  BYTES_PER_ELEMENT: number
+}
+
+/** Create a {@link NodeJS.TypedArray} copying the contents of its source {@link Buffer} */
 function makeTypedArray<T extends NodeJS.TypedArray>(
-  constructor: new (buffer: ArrayBuffer, offset?: number, length?: number) => T,
+  constructor: TypedArrayConstructor<T>,
   source: Buffer,
-  bytesPerValue: number,
 ): T {
   const clone = Buffer.from(source)
   const { buffer, byteOffset, byteLength } = clone
-  return new constructor(buffer, byteOffset, byteLength / bytesPerValue)
+  return new constructor(buffer, byteOffset, byteLength / constructor.BYTES_PER_ELEMENT)
 }
 
+/* ========================================================================== */
+
+/** Types that can be serialized by our {@link Client}. */
 export type Serializable = bigint | string | number | boolean | null | object
+
+/** Types that can be appended/prepended by our {@link Client}. */
 export type Appendable = string | NodeJS.TypedArray
 
+/** The `ClientResult` interface associate a value with its _CAS_. */
 export interface ClientResult<T extends Serializable> {
+  /** The value returned by the {@link Client} */
   value: T
+  /** The _CAS_ of the value being returned */
   cas: bigint
 }
 
+/**
+ * A `Client` represents a high-level client for a _Memcached_ server.
+ */
 export class Client {
   #adapter!: Adapter
   #prefix: string
 
+  /** Construct a new {@link Client} from environment variables */
   constructor()
+  /** Construct a new {@link Client} wrapping an existing `Adapter` */
   constructor(adapter: Adapter)
+  /** Construct a new {@link Client} given the specified {@link ClusterOptions} */
   constructor(options: ClusterOptions)
 
   constructor(adapterOrOptions?: Adapter | ClusterOptions) {
@@ -100,14 +122,17 @@ export class Client {
     assert(this.#adapter, 'Invalid client constructor arguments')
   }
 
+  /** Return the {@link Adapter} backing this {@link Client} instance */
   get adapter(): Adapter {
     return this.#adapter
   }
 
+  /** Return the prefix prepended to all keys managed by this {@link Client} */
   get prefix(): string {
     return this.#prefix
   }
 
+  /** Return a new {@link Client} prefixing keys with the specified `string` */
   withPrefix(prefix: string): Client {
     assert(prefix, 'Invalid prefix')
     const client = new Client(this.#adapter)
@@ -137,27 +162,27 @@ export class Client {
           return { value: JSON.parse(value.toString('utf-8' ), reviver) as T, cas }
 
         case FLAGS.UINT8ARRAY:
-          return { value: makeTypedArray(Uint8Array, value, 1) as T, cas }
+          return { value: makeTypedArray(Uint8Array, value) as T, cas }
         case FLAGS.UINT8CLAMPEDARRAY:
-          return { value: makeTypedArray(Uint8ClampedArray, value, 1) as T, cas }
+          return { value: makeTypedArray(Uint8ClampedArray, value) as T, cas }
         case FLAGS.UINT16ARRAY:
-          return { value: makeTypedArray(Uint16Array, value, 2) as T, cas }
+          return { value: makeTypedArray(Uint16Array, value) as T, cas }
         case FLAGS.UINT32ARRAY:
-          return { value: makeTypedArray(Uint32Array, value, 4) as T, cas }
+          return { value: makeTypedArray(Uint32Array, value) as T, cas }
         case FLAGS.INT8ARRAY:
-          return { value: makeTypedArray(Int8Array, value, 1) as T, cas }
+          return { value: makeTypedArray(Int8Array, value) as T, cas }
         case FLAGS.INT16ARRAY:
-          return { value: makeTypedArray(Int16Array, value, 2) as T, cas }
+          return { value: makeTypedArray(Int16Array, value) as T, cas }
         case FLAGS.INT32ARRAY:
-          return { value: makeTypedArray(Int32Array, value, 4) as T, cas }
+          return { value: makeTypedArray(Int32Array, value) as T, cas }
         case FLAGS.BIGUINT64ARRAY:
-          return { value: makeTypedArray(BigUint64Array, value, 8) as T, cas }
+          return { value: makeTypedArray(BigUint64Array, value) as T, cas }
         case FLAGS.BIGINT64ARRAY:
-          return { value: makeTypedArray(BigInt64Array, value, 8) as T, cas }
+          return { value: makeTypedArray(BigInt64Array, value) as T, cas }
         case FLAGS.FLOAT32ARRAY:
-          return { value: makeTypedArray(Float32Array, value, 4) as T, cas }
+          return { value: makeTypedArray(Float32Array, value) as T, cas }
         case FLAGS.FLOAT64ARRAY:
-          return { value: makeTypedArray(Float64Array, value, 8) as T, cas }
+          return { value: makeTypedArray(Float64Array, value) as T, cas }
 
         case FLAGS.BUFFER:
         default:
@@ -172,7 +197,7 @@ export class Client {
     return this.#adapter.set(this.#prefix + key, ...toBuffer(value, options))
   }
 
-  async add(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | undefined> {
+  async add(key: string, value: Serializable, options?: { ttl?: number }): Promise<bigint | undefined> {
     return this.#adapter.add(this.#prefix + key, ...toBuffer(value, options))
   }
 
