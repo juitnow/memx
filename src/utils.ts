@@ -19,8 +19,13 @@ export class Factory<T extends Serializable> {
   }
 
   async get(key: string): Promise<T> {
-    const cached = await this.#client.get(key, { ttl: this.#ttl })
-    if (cached) return cached.value as T
+    const cached = await this.#client.get(key)
+    if (cached) {
+      void logPromiseError(
+          this.#client.touch(key),
+          `Factory error touching key "${this.#client.prefix}${key}"`)
+      return cached.value as T
+    }
 
     const created = await this.#factory(key)
     if (created) {

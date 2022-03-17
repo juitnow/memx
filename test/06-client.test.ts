@@ -73,6 +73,7 @@ describe('Memcached Client', () => {
       it(test, async () => {
         const cas = await client.set(key, value)
         expect(await client.get(key)).eql({ value, cas })
+        expect(await client.gat(key, 1)).eql({ value, cas })
       })
     }
 

@@ -4,7 +4,7 @@ import { isTypedArray } from 'util/types'
 import { ClusterAdapter, ClusterOptions } from './cluster'
 import { EMPTY_BUFFER, FLAGS } from './constants'
 import { typedArrayFlags } from './internals'
-import { Adapter, Counter, Stats } from './types'
+import { Adapter, AdapterResult, Counter, Stats } from './types'
 
 /** JSON replacere function serializing `bigint`, {@link Date}, {@link Set} and {@link Map}. */
 function replacer(this: any, key: string, value: any): any {
@@ -66,6 +66,56 @@ function toBuffer<T>(value: Serializable | Appendable, options: T): [ Buffer, T 
 type TypedArrayConstructor<T extends NodeJS.TypedArray> = {
   new (buffer: ArrayBuffer, offset?: number, length?: number): T
   BYTES_PER_ELEMENT: number
+}
+
+function fromBuffer<T extends Serializable>(result: AdapterResult): ClientResult<T> {
+  try {
+    const { flags, value, cas } = result
+    switch (flags) {
+      case FLAGS.BIGINT:
+        return { value: BigInt(value.toString('utf-8')) as T, cas }
+      case FLAGS.BOOLEAN:
+        return { value: !!value[0] as T, cas }
+      case FLAGS.NUMBER:
+        return { value: Number(value.toString('utf-8' )) as T, cas }
+      case FLAGS.STRING:
+        return { value: value.toString('utf-8' ) as T, cas }
+
+      case FLAGS.NULL:
+        return { value: null as T, cas }
+      case FLAGS.JSON:
+        return { value: JSON.parse(value.toString('utf-8' ), reviver) as T, cas }
+
+      case FLAGS.UINT8ARRAY:
+        return { value: makeTypedArray(Uint8Array, value) as T, cas }
+      case FLAGS.UINT8CLAMPEDARRAY:
+        return { value: makeTypedArray(Uint8ClampedArray, value) as T, cas }
+      case FLAGS.UINT16ARRAY:
+        return { value: makeTypedArray(Uint16Array, value) as T, cas }
+      case FLAGS.UINT32ARRAY:
+        return { value: makeTypedArray(Uint32Array, value) as T, cas }
+      case FLAGS.INT8ARRAY:
+        return { value: makeTypedArray(Int8Array, value) as T, cas }
+      case FLAGS.INT16ARRAY:
+        return { value: makeTypedArray(Int16Array, value) as T, cas }
+      case FLAGS.INT32ARRAY:
+        return { value: makeTypedArray(Int32Array, value) as T, cas }
+      case FLAGS.BIGUINT64ARRAY:
+        return { value: makeTypedArray(BigUint64Array, value) as T, cas }
+      case FLAGS.BIGINT64ARRAY:
+        return { value: makeTypedArray(BigInt64Array, value) as T, cas }
+      case FLAGS.FLOAT32ARRAY:
+        return { value: makeTypedArray(Float32Array, value) as T, cas }
+      case FLAGS.FLOAT64ARRAY:
+        return { value: makeTypedArray(Float64Array, value) as T, cas }
+
+      case FLAGS.BUFFER:
+      default:
+        return { value: Buffer.from(value) as T, cas }
+    }
+  } finally {
+    result.recycle()
+  }
 }
 
 /** Create a {@link NodeJS.TypedArray} copying the contents of its source {@link Buffer} */
@@ -140,59 +190,14 @@ export class Client {
     return client
   }
 
-  async get<T extends Serializable>(key: string, options?: { ttl?: number }): Promise<ClientResult<T> | undefined> {
-    const result = await this.#adapter.get(this.#prefix + key) // TODO , options)
-    if (! result) return
+  async get<T extends Serializable>(key: string): Promise<ClientResult<T> | undefined> {
+    const result = await this.#adapter.get(this.#prefix + key)
+    return result && fromBuffer(result)
+  }
 
-    void options // TODO
-
-    try {
-      const { flags, value, cas } = result
-      switch (flags) {
-        case FLAGS.BIGINT:
-          return { value: BigInt(value.toString('utf-8')) as T, cas }
-        case FLAGS.BOOLEAN:
-          return { value: !!value[0] as T, cas }
-        case FLAGS.NUMBER:
-          return { value: Number(value.toString('utf-8' )) as T, cas }
-        case FLAGS.STRING:
-          return { value: value.toString('utf-8' ) as T, cas }
-
-        case FLAGS.NULL:
-          return { value: null as T, cas }
-        case FLAGS.JSON:
-          return { value: JSON.parse(value.toString('utf-8' ), reviver) as T, cas }
-
-        case FLAGS.UINT8ARRAY:
-          return { value: makeTypedArray(Uint8Array, value) as T, cas }
-        case FLAGS.UINT8CLAMPEDARRAY:
-          return { value: makeTypedArray(Uint8ClampedArray, value) as T, cas }
-        case FLAGS.UINT16ARRAY:
-          return { value: makeTypedArray(Uint16Array, value) as T, cas }
-        case FLAGS.UINT32ARRAY:
-          return { value: makeTypedArray(Uint32Array, value) as T, cas }
-        case FLAGS.INT8ARRAY:
-          return { value: makeTypedArray(Int8Array, value) as T, cas }
-        case FLAGS.INT16ARRAY:
-          return { value: makeTypedArray(Int16Array, value) as T, cas }
-        case FLAGS.INT32ARRAY:
-          return { value: makeTypedArray(Int32Array, value) as T, cas }
-        case FLAGS.BIGUINT64ARRAY:
-          return { value: makeTypedArray(BigUint64Array, value) as T, cas }
-        case FLAGS.BIGINT64ARRAY:
-          return { value: makeTypedArray(BigInt64Array, value) as T, cas }
-        case FLAGS.FLOAT32ARRAY:
-          return { value: makeTypedArray(Float32Array, value) as T, cas }
-        case FLAGS.FLOAT64ARRAY:
-          return { value: makeTypedArray(Float64Array, value) as T, cas }
-
-        case FLAGS.BUFFER:
-        default:
-          return { value: Buffer.from(value) as T, cas }
-      }
-    } finally {
-      result.recycle()
-    }
+  async gat<T extends Serializable>(key: string, ttl: number): Promise<ClientResult<T> | undefined> {
+    const result = await this.#adapter.gat(this.#prefix + key, ttl)
+    return result && fromBuffer(result)
   }
 
   async set(key: string, value: Serializable, options?: { cas?: bigint, ttl?: number }): Promise<bigint | undefined> {
