@@ -10,6 +10,7 @@ export {
   connection,
 }
 
+export * from './fake'
 export * from './types'
 export * from './cluster'
 export * from './server'
