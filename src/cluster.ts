@@ -75,8 +75,12 @@ export class ClusterAdapter implements Adapter {
     return this.servers[hash % this.servers.length]
   }
 
-  get(key: string, options?: { ttl?: number }): Promise<AdapterResult | undefined> {
-    return this.server(key).get(key, options)
+  get(key: string): Promise<AdapterResult | undefined> {
+    return this.server(key).get(key)
+  }
+
+  gat(key: string, ttl: number): Promise<AdapterResult | undefined> {
+    return this.server(key).gat(key, ttl)
   }
 
   touch(key: string, ttl?: number): Promise<boolean> {

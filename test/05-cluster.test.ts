@@ -154,8 +154,18 @@ describe('Cluster Adapter', () => {
         { get: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.get('foo', { ttl: 100 })).to.eql([ 1, 'foo', { ttl: 100 } ])
-      expect(await cluster.get('bar', { ttl: 100 })).to.eql([ 2, 'bar', { ttl: 100 } ])
+      expect(await cluster.get('foo')).to.eql([ 1, 'foo' ])
+      expect(await cluster.get('bar')).to.eql([ 2, 'bar' ])
+    })
+
+    it('gat', async () => {
+      const cluster = new ClusterAdapter([
+        { gat: async (...args: any) => [ 1, ...args ] } as any as ServerAdapter,
+        { gat: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
+      ])
+
+      expect(await cluster.gat('foo', 100)).to.eql([ 1, 'foo', 100 ])
+      expect(await cluster.gat('bar', 100)).to.eql([ 2, 'bar', 100 ])
     })
 
     it('touch', async () => {

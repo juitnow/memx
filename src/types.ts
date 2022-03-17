@@ -196,7 +196,11 @@ export interface Stats {
 export interface Adapter {
   get(
     key: string,
-    options?: { ttl?: number },
+  ): Promise<AdapterResult | undefined>
+
+  gat(
+    key: string,
+    ttl: number,
   ): Promise<AdapterResult | undefined>
 
   touch(

@@ -141,8 +141,10 @@ export class Client {
   }
 
   async get<T extends Serializable>(key: string, options?: { ttl?: number }): Promise<ClientResult<T> | undefined> {
-    const result = await this.#adapter.get(this.#prefix + key, options)
+    const result = await this.#adapter.get(this.#prefix + key) // TODO , options)
     if (! result) return
+
+    void options // TODO
 
     try {
       const { flags, value, cas } = result

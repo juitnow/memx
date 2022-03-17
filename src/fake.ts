@@ -41,15 +41,26 @@ export class FakeAdapter implements Adapter {
 
   async get(
     key: string,
-    options: { ttl?: number } = {},
   ): Promise<AdapterResult | undefined> {
     const entry = this.#get(key)
     if (! entry) return
 
-    if (options.ttl !== undefined) {
-      const exp = toExp(options.ttl)
-      entry.exp = exp
+    return {
+      value: entry.value,
+      flags: entry.flags,
+      cas: entry.cas,
+      recycle: () => void 0,
     }
+  }
+
+  async gat(
+    key: string,
+    ttl: number,
+  ): Promise<AdapterResult | undefined> {
+    const entry = this.#get(key)
+    if (! entry) return
+
+    entry.exp = toExp(ttl)
 
     return {
       value: entry.value,

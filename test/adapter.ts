@@ -86,25 +86,23 @@ export function adapterTests(client: Adapter): void {
       })
     })
 
-    it('should get a value and change its ttl', async function() {
+    it('should get and touch (gat) a value', async function() {
       this.timeout(10000)
       this.slow(3000)
 
-      expect(await client.get(key, { ttl: 1 })).to.be.undefined
+      expect(await client.gat(key, 1)).to.be.undefined
 
       const cas = await client.set(key, value)
       expect(cas).to.be.a('bigint')
 
-      expect(await client.get(key, { ttl: 1 })).excluding('recycle').to.eql({
+      const result = await client.gat(key, 1)
+      expect(result).excluding('recycle').to.eql({
         value,
         flags: 0,
         cas,
       })
-      expect(await client.get(key)).excluding('recycle').to.eql({
-        value,
-        flags: 0,
-        cas,
-      })
+
+      expect(result?.recycle()).to.be.undefined
 
       await new Promise((resolve) => setTimeout(resolve, 2000))
       expect(await client.get(key)).to.be.undefined

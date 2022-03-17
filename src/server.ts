@@ -107,14 +107,12 @@ export class ServerAdapter implements Adapter {
 
   /* ======================================================================== */
 
-  async get(
+  async #get(
     key: string,
-    options: { ttl?: number } = {},
+    ttl?: number,
   ): Promise<AdapterResult | undefined> {
-    const { ttl } = options
-
     let keyOffset = 0
-    if (ttl) keyOffset = this.#buffer.writeUInt32BE(ttl)
+    if (ttl !== undefined) keyOffset = this.#buffer.writeUInt32BE(ttl)
     const keyLength = this.#writeKey(key, keyOffset)
 
     const [ response ] = await this.#connection.send({
@@ -142,11 +140,24 @@ export class ServerAdapter implements Adapter {
     }
   }
 
+  async get(
+    key: string,
+  ): Promise<AdapterResult | undefined> {
+    return this.#get(key)
+  }
+
+  async gat(
+    key: string,
+    ttl: number,
+  ): Promise<AdapterResult | undefined> {
+    return this.#get(key, ttl)
+  }
+
   async touch(
     key: string,
     ttl?: number,
   ): Promise<boolean> {
-    const timeToLive = ttl === undefined ? this.#ttl : ttl
+    const timeToLive = ttl ?? this.#ttl
 
     const keyOffset = this.#buffer.writeUInt32BE(timeToLive)
     const keyLength = this.#writeKey(key, keyOffset)

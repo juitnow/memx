@@ -76,11 +76,7 @@ describe('Server Adapter', () => {
   /* ======================================================================== */
 
   describe('edge cases', () => {
-    const ServerAdapter2 = ServerAdapter as {
-      new (options: any): ServerAdapter
-    }
-
-    const client = new ServerAdapter2({
+    const client = new ServerAdapter({
       host: 'host',
       port: 12345,
       factory: (options: any): any => {
@@ -93,7 +89,30 @@ describe('Server Adapter', () => {
           }
         }(options)
       },
-    })
+    } as any)
+
+    // it('should get and touch (gat) a value with the default TTL', async function() {
+    //   this.timeout(10000)
+    //   this.slow(3000)
+
+    //   const client = new ServerAdapter({ host, port, ttl: 1 })
+    //   const key = randomBytes(30).toString('base64')
+    //   const value = randomBytes(64)
+
+    //   expect(await client.get(key)).to.be.undefined
+
+    //   const cas = await client.set(key, value, { ttl: 3600 })
+    //   expect(cas).to.be.a('bigint')
+
+    //   expect(await client.gat(key)).excluding('recycle').to.eql({
+    //     value,
+    //     flags: 0,
+    //     cas,
+    //   })
+
+    //   await new Promise((resolve) => setTimeout(resolve, 2000))
+    //   expect(await client.get(key)).to.be.undefined
+    // })
 
     it('should fail on get', async () => {
       await expect(client.get('foo')).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
