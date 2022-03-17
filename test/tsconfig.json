@@ -3,6 +3,8 @@
   "compilerOptions": {
     "types": [ "mocha", "node" ],
     "rootDir": "..",
+    "emitDeclarationOnly": false,
+    "noEmit": true,
   },
   "include": [ "." ],
   "exclude": [ "*.test-d.ts" ],
