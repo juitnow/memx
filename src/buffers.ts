@@ -3,7 +3,7 @@ import { BUFFERS } from './constants'
 const pool: Buffer[] = new Array(BUFFERS.POOL_SIZE)
 let offset = -1
 
-/** A `RecyclableBuffer` is a {@link Buffer} that can be recycled by a pool. */
+/** A `RecyclableBuffer` is a `Buffer` that can be recycled by a pool. */
 export interface RecyclableBuffer extends Buffer {
   /** Recycle this buffer. */
   recycle(): void

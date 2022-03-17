@@ -1,3 +1,5 @@
+export type { RecyclableBuffer } from './buffers'
+
 import * as decode from './decode'
 import * as encode from './encode'
 import * as constants from './constants'

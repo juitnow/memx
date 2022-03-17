@@ -6,7 +6,7 @@ import { Decoder, RawIncomingPacket } from './decode'
 import { BUFFERS, OPCODE } from './constants'
 import { socketFinalizationRegistry } from './internals'
 
-type RawIncomingPackets = [ RawIncomingPacket, ...RawIncomingPacket[] ]
+export type RawIncomingPackets = [ RawIncomingPacket, ...RawIncomingPacket[] ]
 
 class Deferred {
   #resolve!: (value: RawIncomingPackets) => void
