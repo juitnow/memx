@@ -87,7 +87,7 @@ export class ClusterAdapter implements Adapter {
     return this.server(key).set(key, value, options)
   }
 
-  add(key: string, value: Buffer, options?: { flags?: number; cas?: bigint; ttl?: number }): Promise<bigint | undefined> {
+  add(key: string, value: Buffer, options?: { flags?: number; ttl?: number }): Promise<bigint | undefined> {
     return this.server(key).add(key, value, options)
   }
 

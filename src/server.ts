@@ -228,7 +228,7 @@ export class ServerAdapter implements Adapter {
   add(
     key: string,
     value: Buffer,
-    options: { flags?: number, cas?: bigint, ttl?: number } = {},
+    options: { flags?: number, ttl?: number } = {},
   ): Promise<bigint | undefined> {
     return this.#sar(OPCODE.ADD, key, value, options)
   }

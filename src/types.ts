@@ -213,7 +213,7 @@ export interface Adapter {
   add(
     key: string,
     value: Buffer,
-    options?: { flags?: number, cas?: bigint, ttl?: number },
+    options?: { flags?: number, ttl?: number },
   ): Promise<bigint | undefined>
 
   replace(
