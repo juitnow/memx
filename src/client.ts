@@ -190,12 +190,22 @@ export class Client {
     return client
   }
 
-  async get<T extends Serializable>(key: string): Promise<ClientResult<T> | undefined> {
+  async get<T extends Serializable>(key: string): Promise<T | undefined> {
+    const result = await this.#adapter.get(this.#prefix + key)
+    return result && fromBuffer<T>(result).value
+  }
+
+  async gat<T extends Serializable>(key: string, ttl: number): Promise<T | undefined> {
+    const result = await this.#adapter.gat(this.#prefix + key, ttl)
+    return result && fromBuffer<T>(result).value
+  }
+
+  async getc<T extends Serializable>(key: string): Promise<ClientResult<T> | undefined> {
     const result = await this.#adapter.get(this.#prefix + key)
     return result && fromBuffer(result)
   }
 
-  async gat<T extends Serializable>(key: string, ttl: number): Promise<ClientResult<T> | undefined> {
+  async gatc<T extends Serializable>(key: string, ttl: number): Promise<ClientResult<T> | undefined> {
     const result = await this.#adapter.gat(this.#prefix + key, ttl)
     return result && fromBuffer(result)
   }
