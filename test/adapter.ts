@@ -90,7 +90,7 @@ export function adapterTests(client: Adapter): void {
       this.timeout(10000)
       this.slow(3000)
 
-      expect(await client.gat(key, 1)).to.be.undefined
+      expect(await client.gat(key, 0)).to.be.undefined
 
       const cas = await client.set(key, value)
       expect(cas).to.be.a('bigint')
