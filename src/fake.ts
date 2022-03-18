@@ -16,6 +16,8 @@ export class FakeAdapter implements Adapter {
   #cache = new Map<string, Entry>()
   #cas = 1n
 
+  readonly ttl = 0
+
   #get(key: string): Entry | undefined {
     if (key.length > 250) throw new TypeError(`Key too long (len=${key.length})`)
     const entry = this.#cache.get(key)
