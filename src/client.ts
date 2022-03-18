@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { isTypedArray } from 'util/types'
+import { types } from 'util'
 
 import { ClusterAdapter, ClusterOptions } from './cluster'
 import { EMPTY_BUFFER, FLAGS } from './constants'
@@ -48,7 +48,7 @@ function toBuffer<T>(value: Serializable | Appendable, options: T): [ Buffer, T 
   }
 
   // typed arrays are special
-  if (isTypedArray(value)) {
+  if (types.isTypedArray(value)) {
     const flags = typedArrayFlags(value)
     const buffer = Buffer.from(value.buffer, value.byteOffset, value.byteLength)
     return [ buffer, { ...options, flags } ]
