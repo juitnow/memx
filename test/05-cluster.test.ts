@@ -1,3 +1,4 @@
+import { AssertionError } from 'assert'
 import { expect } from 'chai'
 import { randomBytes } from 'crypto'
 import { ClusterAdapter, ServerAdapter, ServerOptions } from '../src/index'
@@ -123,25 +124,30 @@ describe('Cluster Adapter', () => {
         { host: 'host1' },
         { host: 'host2', port: 12345 },
         { host: 'host3', timeout: 98 },
-        { host: 'host4', ttl: 9 },
+        { host: 'host4', ttl: 0 },
       ] }), [
         { host: 'host1', port: 11211, timeout: 1000, ttl: 0 },
         { host: 'host2', port: 12345, timeout: 1000, ttl: 0 },
         { host: 'host3', port: 11211, timeout: 98, ttl: 0 },
-        { host: 'host4', port: 11211, timeout: 1000, ttl: 9 },
+        { host: 'host4', port: 11211, timeout: 1000, ttl: 0 },
       ])
 
       check(new ClusterAdapter({ hosts: [
         { host: 'host1' },
         { host: 'host2', port: 12345 },
         { host: 'host3', timeout: 98 },
-        { host: 'host4', ttl: 9 },
+        { host: 'host4', ttl: 4 },
       ], timeout: 76, ttl: 4 }), [
         { host: 'host1', port: 11211, timeout: 76, ttl: 4 },
         { host: 'host2', port: 12345, timeout: 76, ttl: 4 },
         { host: 'host3', port: 11211, timeout: 98, ttl: 4 },
-        { host: 'host4', port: 11211, timeout: 76, ttl: 9 },
+        { host: 'host4', port: 11211, timeout: 76, ttl: 4 },
       ])
+
+      expect(() => new ClusterAdapter({ hosts: [
+        { host: 'host1' },
+        { host: 'host2', ttl: 123 },
+      ], ttl: 321 })).to.throw(AssertionError, 'TTL Mismatch (123 != 321)')
     })
   })
 
