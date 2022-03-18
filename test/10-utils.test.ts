@@ -20,7 +20,7 @@ describe('Utilities', () => {
 
       // should create
       expect(await factory.get(key)).to.eql({ key, count: 1 })
-      expect((await client.get(key))?.value).to.eql({ key, count: 1 })
+      expect((await client.getc(key))?.value).to.eql({ key, count: 1 })
 
       // should return cached
       expect(await factory.get(key)).to.eql({ key, count: 1 })
@@ -35,7 +35,7 @@ describe('Utilities', () => {
 
       // should not create
       expect(await factory.get(key)).to.be.undefined
-      expect(await client.get(key)).to.be.undefined
+      expect(await client.getc(key)).to.be.undefined
     })
   })
 
@@ -44,30 +44,30 @@ describe('Utilities', () => {
       const bundle = new Bundle<string>(client, key)
 
       expect(await bundle.list()).to.eql({})
-      expect((await client.get(key))).to.be.undefined
+      expect((await client.getc(key))).to.be.undefined
 
       await bundle.add('foo', 'this is foo')
-      expect((await client.get(key))?.value).to.equal('foo')
+      expect((await client.getc(key))?.value).to.equal('foo')
       await bundle.add('bar', 'this is bar')
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       expect(await bundle.list()).to.eql({
         foo: 'this is foo',
         bar: 'this is bar',
       })
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       expect(await bundle.get('foo')).to.equal('this is foo')
       expect(await bundle.get('bar')).to.equal('this is bar')
 
       await bundle.add('bar', 'this is another bar')
-      expect((await client.get(key))?.value).to.equal('foo\0bar\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar\0bar')
 
       expect(await bundle.list()).to.eql({
         foo: 'this is foo',
         bar: 'this is another bar',
       })
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       expect(await bundle.get('foo')).to.equal('this is foo')
       expect(await bundle.get('bar')).to.equal('this is another bar')
@@ -77,53 +77,53 @@ describe('Utilities', () => {
       const bundle = new Bundle<string>(client, key)
 
       expect(await bundle.list()).to.eql({})
-      expect((await client.get(key))).to.be.undefined
+      expect((await client.getc(key))).to.be.undefined
 
       await bundle.add('foo', 'this is foo')
-      expect((await client.get(key))?.value).to.equal('foo')
+      expect((await client.getc(key))?.value).to.equal('foo')
       await bundle.add('bar', 'this is bar')
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       await client.delete(`${key}:bar`)
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       expect(await bundle.list()).to.eql({
         foo: 'this is foo',
       })
-      expect((await client.get(key))?.value).to.equal('foo')
+      expect((await client.getc(key))?.value).to.equal('foo')
     })
 
     it('should compact keys when getting missing keys', async () => {
       const bundle = new Bundle<string>(client, key)
 
       expect(await bundle.list()).to.eql({})
-      expect((await client.get(key))).to.be.undefined
+      expect((await client.getc(key))).to.be.undefined
 
       await bundle.add('foo', 'this is foo')
-      expect((await client.get(key))?.value).to.equal('foo')
+      expect((await client.getc(key))?.value).to.equal('foo')
       await bundle.add('bar', 'this is bar')
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       await client.delete(`${key}:bar`)
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       expect(await bundle.get('foo')).to.equal('this is foo')
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       expect(await bundle.get('bar')).to.be.undefined
-      expect((await client.get(key))?.value).to.equal('foo')
+      expect((await client.getc(key))?.value).to.equal('foo')
     })
 
     it('should return values even when the master key is evicted', async () => {
       const bundle = new Bundle<string>(client, key)
 
       expect(await bundle.list()).to.eql({})
-      expect((await client.get(key))).to.be.undefined
+      expect((await client.getc(key))).to.be.undefined
 
       await bundle.add('foo', 'this is foo')
-      expect((await client.get(key))?.value).to.equal('foo')
+      expect((await client.getc(key))?.value).to.equal('foo')
       await bundle.add('bar', 'this is bar')
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       await client.delete(key)
 
@@ -136,16 +136,16 @@ describe('Utilities', () => {
       const bundle = new Bundle<string>(client, key)
 
       expect(await bundle.list()).to.eql({})
-      expect((await client.get(key))).to.be.undefined
+      expect((await client.getc(key))).to.be.undefined
 
       await bundle.add('foo', 'this is foo')
-      expect((await client.get(key))?.value).to.equal('foo')
+      expect((await client.getc(key))?.value).to.equal('foo')
       await bundle.add('bar', 'this is bar')
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       await bundle.delete('bar')
-      expect((await client.get(key))?.value).to.equal('foo')
-      expect((await client.get(`${key}:bar`))).to.be.undefined
+      expect((await client.getc(key))?.value).to.equal('foo')
+      expect((await client.getc(`${key}:bar`))).to.be.undefined
 
       expect(await bundle.get('foo')).to.equal('this is foo')
       expect(await bundle.get('bar')).to.be.undefined
@@ -156,12 +156,12 @@ describe('Utilities', () => {
       const bundle = new Bundle<string>(client, key)
 
       expect(await bundle.list()).to.eql({})
-      expect((await client.get(key))).to.be.undefined
+      expect((await client.getc(key))).to.be.undefined
 
       await bundle.add('foo', 'this is foo')
-      expect((await client.get(key))?.value).to.equal('foo')
+      expect((await client.getc(key))?.value).to.equal('foo')
       await bundle.add('bar', 'this is bar')
-      expect((await client.get(key))?.value).to.equal('foo\0bar')
+      expect((await client.getc(key))?.value).to.equal('foo\0bar')
 
       await client.delete(key)
 
@@ -182,29 +182,29 @@ describe('Utilities', () => {
       const lock = new PoorManLock(client, key)
       const record: string[] = []
 
-      expect((await client.get(key))?.value).to.be.undefined
+      expect((await client.getc(key))?.value).to.be.undefined
 
       record.push('create 1')
       const p1 = lock.execute(async () => {
-        expect((await client.get(key))?.value).to.be.false // "anonymous"
+        expect((await client.getc(key))?.value).to.be.false // "anonymous"
 
         record.push('start 1')
         await new Promise((resolve) => setTimeout(resolve, 1000))
         record.push('end 1')
 
-        expect((await client.get(key))?.value).to.be.false // "anonymous"
+        expect((await client.getc(key))?.value).to.be.false // "anonymous"
       })
 
       record.push('create 2')
       const p2 = lock.execute(async () => {
-        expect((await client.get(key))?.value).to.equal('foo') // owner "foo"
+        expect((await client.getc(key))?.value).to.equal('foo') // owner "foo"
         record.push('execute 2')
       }, { owner: 'foo', timeout: 2000 })
 
       await Promise.allSettled([ p1, p2 ])
 
       // lock should be cleared
-      expect((await client.get(key))?.value).to.be.undefined
+      expect((await client.getc(key))?.value).to.be.undefined
       expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1', 'execute 2' ])
     })
 
@@ -215,17 +215,17 @@ describe('Utilities', () => {
       const lock = new PoorManLock(client, key)
       const record: string[] = []
 
-      expect((await client.get(key))?.value).to.be.undefined
+      expect((await client.getc(key))?.value).to.be.undefined
 
       record.push('create 1')
       const p1 = lock.execute(async () => {
-        expect((await client.get(key))?.value).to.be.false // anonymous
+        expect((await client.getc(key))?.value).to.be.false // anonymous
 
         record.push('start 1')
         await new Promise((resolve) => setTimeout(resolve, 1000))
         record.push('end 1')
 
-        expect((await client.get(key))?.value).to.be.false // anonymous
+        expect((await client.getc(key))?.value).to.be.false // anonymous
 
         return 'hello, world!'
       })
@@ -240,7 +240,7 @@ describe('Utilities', () => {
       expect(await p1).to.equal('hello, world!')
       await expect(p2).to.be.rejectedWith(Error, `Lock "${key}" timeout (owner=anonymous)`)
 
-      expect((await client.get(key))?.value).to.be.undefined
+      expect((await client.getc(key))?.value).to.be.undefined
       expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
     })
 
@@ -251,17 +251,17 @@ describe('Utilities', () => {
       const lock = new PoorManLock(client, key)
       const record: string[] = []
 
-      expect((await client.get(key))?.value).to.be.undefined
+      expect((await client.getc(key))?.value).to.be.undefined
 
       record.push('create 1')
       const p1 = lock.execute(async () => {
-        expect((await client.get(key))?.value).to.equal('foobar') // owner "foobar"
+        expect((await client.getc(key))?.value).to.equal('foobar') // owner "foobar"
 
         record.push('start 1')
         await new Promise((resolve) => setTimeout(resolve, 1000))
         record.push('end 1')
 
-        expect((await client.get(key))?.value).to.equal('foobar') // owner "foobar"
+        expect((await client.getc(key))?.value).to.equal('foobar') // owner "foobar"
 
         return 'hello, world!'
       }, { owner: 'foobar' })
@@ -276,7 +276,7 @@ describe('Utilities', () => {
       expect(await p1).to.equal('hello, world!')
       await expect(p2).to.be.rejectedWith(Error, `Lock "${key}" timeout (owner="foobar")`)
 
-      expect((await client.get(key))?.value).to.be.undefined
+      expect((await client.getc(key))?.value).to.be.undefined
       expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
     })
   })
