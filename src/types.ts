@@ -194,6 +194,8 @@ export interface Stats {
 }
 
 export interface Adapter {
+  readonly ttl: number
+
   get(
     key: string,
   ): Promise<AdapterResult | undefined>
