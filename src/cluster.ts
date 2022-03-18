@@ -1,5 +1,6 @@
 import { Adapter, Counter, AdapterResult, Stats } from './types'
 import { ServerAdapter, ServerOptions } from './server'
+import assert from 'assert'
 
 function parseHosts(hosts?: string): ServerOptions[] {
   const result: { host: string, port?: number }[] = []
@@ -23,6 +24,7 @@ export interface ClusterOptions {
 
 export class ClusterAdapter implements Adapter {
   readonly servers: readonly ServerAdapter[]
+  readonly ttl: number
 
   constructor()
   constructor(servers: ServerAdapter[])
@@ -61,6 +63,12 @@ export class ClusterAdapter implements Adapter {
     // Validate and shortcut in case of single-servers setup
     if (this.servers.length < 1) throw new Error('No hosts configured')
     if (this.servers.length === 1) this.server = (): ServerAdapter => this.servers[0]
+
+    // Check TTLs are all the same
+    this.ttl = this.servers[0].ttl
+    this.servers.slice(1).forEach((server) => {
+      assert.equal(server.ttl, this.ttl, `TTL Mismatch (${server.ttl} != ${this.ttl})`)
+    })
 
     // Freeze our lists of servers
     Object.freeze(this.servers)
