@@ -1,6 +1,6 @@
 {
   "name": "memx",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Simple and fast memcached client",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
