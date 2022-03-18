@@ -153,7 +153,7 @@ export class Client {
 
   /** Construct a new {@link Client} from environment variables */
   constructor()
-  /** Construct a new {@link Client} wrapping an existing `Adapter` */
+  /** Construct a new {@link Client} wrapping an existing {@link Adapter} */
   constructor(adapter: Adapter)
   /** Construct a new {@link Client} given the specified {@link ClusterOptions} */
   constructor(options: ClusterOptions)
@@ -190,21 +190,25 @@ export class Client {
     return client
   }
 
+  /** Get the value (or `undefined`) associated with the given key */
   async get<T extends Serializable>(key: string): Promise<T | undefined> {
     const result = await this.#adapter.get(this.#prefix + key)
     return result && fromBuffer<T>(result).value
   }
 
+  /** Get the value (or `undefined`) associated with the given key, and update its TTL */
   async gat<T extends Serializable>(key: string, ttl: number): Promise<T | undefined> {
     const result = await this.#adapter.gat(this.#prefix + key, ttl)
     return result && fromBuffer<T>(result).value
   }
 
+  /** Get the value and _CAS_ associated with the given key */
   async getc<T extends Serializable>(key: string): Promise<ClientResult<T> | undefined> {
     const result = await this.#adapter.get(this.#prefix + key)
     return result && fromBuffer(result)
   }
 
+  /** Get the value and _CAS_ associated with the given key, and update its TTL */
   async gatc<T extends Serializable>(key: string, ttl: number): Promise<ClientResult<T> | undefined> {
     const result = await this.#adapter.gat(this.#prefix + key, ttl)
     return result && fromBuffer(result)
