@@ -150,7 +150,7 @@ export class ServerAdapter implements Adapter {
     key: string,
     ttl: number,
   ): Promise<AdapterResult | undefined> {
-    return this.#get(key, ttl)
+    return this.#get(key, ttl || 2592000) // TTL 0 is "invalid arg"
   }
 
   async touch(
