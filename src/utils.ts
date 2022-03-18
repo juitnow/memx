@@ -19,7 +19,7 @@ export class Factory<T extends Serializable> {
   }
 
   async get(key: string): Promise<T> {
-    const cached = await this.#client.get(key)
+    const cached = await this.#client.getc(key)
     if (cached) {
       void logPromiseError(
           this.#client.touch(key),
@@ -63,7 +63,7 @@ export class Bundle<T extends Serializable = Serializable> {
 
   async #removeKey(key: string): Promise<void> {
     await logPromiseError((async (): Promise<void> => {
-      const result = await this.#client.get<string>(this.#name)
+      const result = await this.#client.getc<string>(this.#name)
       if (! result) return
       const keys = result.value.split('\0').filter((k) => k !== key).join('\0')
       await this.#client.set(this.#name, keys, { cas: result.cas, ttl: this.#ttl })
@@ -76,7 +76,7 @@ export class Bundle<T extends Serializable = Serializable> {
   }
 
   async get(key: string): Promise<T | undefined> {
-    const result = await this.#client.get<T>(`${this.#name}:${key}`)
+    const result = await this.#client.getc<T>(`${this.#name}:${key}`)
     if (result) return result.value
     await this.#removeKey(key)
   }
@@ -87,14 +87,14 @@ export class Bundle<T extends Serializable = Serializable> {
   }
 
   async list(): Promise<Record<string, T>> {
-    const result = await this.#client.get<string>(this.#name)
+    const result = await this.#client.getc<string>(this.#name)
     if (! result) return {}
 
     const results: Record<string, T> = {}
     const promises: Promise<void>[] = []
 
     for (const key of new Set(result.value.split('\0'))) {
-      promises.push(this.#client.get<T>(`${this.#name}:${key}`).then((result) => {
+      promises.push(this.#client.getc<T>(`${this.#name}:${key}`).then((result) => {
         if (result) results[key] = result.value
       }))
     }
@@ -136,7 +136,7 @@ export class PoorManLock {
     } while (Date.now() < end)
 
     if (cas === undefined) {
-      const other = await this.#client.get(this.#name)
+      const other = await this.#client.getc(this.#name)
       const owner = (other && other.value) ? `"${other.value}"` : 'anonymous'
       throw new Error(`Lock "${this.#client.prefix}${this.#name}" timeout (owner=${owner})`)
     }
