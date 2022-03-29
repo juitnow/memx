@@ -1,15 +1,15 @@
 /* eslint-disable no-console */
 
 import assert from 'assert'
-import { Client, Serializable } from './client'
+import { MemxClient, Serializable } from './client'
 import { logPromiseError } from './internals'
 
 export class Factory<T extends Serializable> {
   #factory: (key: string) => T | Promise<T>
-  #client: Client
+  #client: MemxClient
   #ttl?: number
 
-  constructor(client: Client, factory: (key: string) => T | Promise<T>, ttl?: number) {
+  constructor(client: MemxClient, factory: (key: string) => T | Promise<T>, ttl?: number) {
     assert(typeof factory === 'function', 'Invalid or no factory specified')
     assert(client, 'No client specified')
 
@@ -38,11 +38,11 @@ export class Factory<T extends Serializable> {
 }
 
 export class Bundle<T extends Serializable = Serializable> {
-  #client: Client
+  #client: MemxClient
   #name: string
   #ttl: number
 
-  constructor(client: Client, name: string, ttl?: number) {
+  constructor(client: MemxClient, name: string, ttl?: number) {
     assert(client, 'No client specified')
     assert(name, 'No bundle name specified')
 
@@ -110,10 +110,10 @@ export class Bundle<T extends Serializable = Serializable> {
 }
 
 export class PoorManLock {
-  #client: Client
+  #client: MemxClient
   #name: string
 
-  constructor(client: Client, name: string) {
+  constructor(client: MemxClient, name: string) {
     assert(client, 'No client specified')
     assert(name, 'No lock name specified')
 

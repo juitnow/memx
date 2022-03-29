@@ -1,12 +1,12 @@
 import { expect } from 'chai'
 import { randomBytes } from 'crypto'
-import { Bundle, Client, Factory, PoorManLock } from '../src/index'
+import { Bundle, MemxClient, Factory, PoorManLock } from '../src/index'
 
 describe('Utilities', () => {
   const host = process.env.MEMCACHED_HOST || '127.0.0.1'
   const port = parseInt(process.env.MEMCACHED_PORT || '11211')
 
-  const client = new Client({ hosts: [ { host, port } ] })
+  const client = new MemxClient({ hosts: [ { host, port } ] })
 
   let key: string
 

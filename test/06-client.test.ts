@@ -1,13 +1,13 @@
 import { AssertionError } from 'assert'
 import { expect } from 'chai'
 import { randomBytes } from 'crypto'
-import { Adapter, Client, ClusterAdapter, ServerAdapter } from '../src/index'
+import { Adapter, MemxClient, ClusterAdapter, ServerAdapter } from '../src/index'
 
 describe('Memcached Client', () => {
   const host = process.env.MEMCACHED_HOST || '127.0.0.1'
   const port = parseInt(process.env.MEMCACHED_PORT || '11211')
 
-  const client = new Client({ hosts: [ { host, port } ] })
+  const client = new MemxClient({ hosts: [ { host, port } ] })
 
   let key: string
 
@@ -23,7 +23,7 @@ describe('Memcached Client', () => {
         delete process.env.MEMCACHED_TTL
         delete process.env.MEMCACHED_TIMEOUT
 
-        const client = new Client()
+        const client = new MemxClient()
         expect(client.adapter).to.be.instanceof(ClusterAdapter)
 
         const adapter = client.adapter as ClusterAdapter
@@ -37,7 +37,7 @@ describe('Memcached Client', () => {
     })
 
     it('should construct with some options', () => {
-      const client = new Client({ hosts: 'host1' })
+      const client = new MemxClient({ hosts: 'host1' })
       expect(client.adapter).to.be.instanceof(ClusterAdapter)
 
       const adapter = client.adapter as ClusterAdapter
@@ -47,12 +47,12 @@ describe('Memcached Client', () => {
 
     it('should construct with an adapter', () => {
       const server = new ServerAdapter({ host: 'host1' })
-      const client = new Client(server)
+      const client = new MemxClient(server)
       expect(client.adapter).to.equal(server)
     })
 
     it('should not construct with something else', () => {
-      expect(() => new Client({} as any))
+      expect(() => new MemxClient({} as any))
           .to.throw(AssertionError, 'Invalid client constructor arguments')
     })
   })
@@ -366,7 +366,7 @@ describe('Memcached Client', () => {
   /* ======================================================================== */
 
   describe('adapter passthrough', () => {
-    const client = new Client({
+    const client = new MemxClient({
       get(...args: any[]): any {
         throw new Error('Method not implemented:' + args)
       },

@@ -130,15 +130,15 @@ function makeTypedArray<T extends NodeJS.TypedArray>(
 
 /* ========================================================================== */
 
-/** Types that can be serialized by our {@link Client}. */
+/** Types that can be serialized by our {@link MemxClient}. */
 export type Serializable = bigint | string | number | boolean | null | object
 
-/** Types that can be appended/prepended by our {@link Client}. */
+/** Types that can be appended/prepended by our {@link MemxClient}. */
 export type Appendable = string | NodeJS.TypedArray
 
 /** The `ClientResult` interface associate a value with its _CAS_. */
 export interface ClientResult<T extends Serializable> {
-  /** The value returned by the {@link Client} */
+  /** The value returned by the {@link MemxClient} */
   value: T
   /** The _CAS_ of the value being returned */
   cas: bigint
@@ -147,15 +147,15 @@ export interface ClientResult<T extends Serializable> {
 /**
  * A `Client` represents a high-level client for a _Memcached_ server.
  */
-export class Client {
+export class MemxClient {
   #adapter!: Adapter
   #prefix: string
 
-  /** Construct a new {@link Client} from environment variables */
+  /** Construct a new {@link MemxClient} from environment variables */
   constructor()
-  /** Construct a new {@link Client} wrapping an existing {@link Adapter} */
+  /** Construct a new {@link MemxClient} wrapping an existing {@link Adapter} */
   constructor(adapter: Adapter)
-  /** Construct a new {@link Client} given the specified {@link ClusterOptions} */
+  /** Construct a new {@link MemxClient} given the specified {@link ClusterOptions} */
   constructor(options: ClusterOptions)
 
   constructor(adapterOrOptions?: Adapter | ClusterOptions) {
@@ -172,20 +172,20 @@ export class Client {
     assert(this.#adapter, 'Invalid client constructor arguments')
   }
 
-  /** Return the {@link Adapter} backing this {@link Client} instance */
+  /** Return the {@link Adapter} backing this {@link MemxClient} instance */
   get adapter(): Adapter {
     return this.#adapter
   }
 
-  /** Return the prefix prepended to all keys managed by this {@link Client} */
+  /** Return the prefix prepended to all keys managed by this {@link MemxClient} */
   get prefix(): string {
     return this.#prefix
   }
 
-  /** Return a new {@link Client} prefixing keys with the specified `string` */
-  withPrefix(prefix: string): Client {
+  /** Return a new {@link MemxClient} prefixing keys with the specified `string` */
+  withPrefix(prefix: string): MemxClient {
     assert(prefix, 'Invalid prefix')
-    const client = new Client(this.#adapter)
+    const client = new MemxClient(this.#adapter)
     client.#prefix = prefix
     return client
   }
