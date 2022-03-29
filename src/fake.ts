@@ -1,4 +1,5 @@
 import { Adapter, AdapterResult, Counter, Stats } from './types'
+import { MemxClient } from './client'
 
 interface Entry {
   value: Buffer,
@@ -218,5 +219,11 @@ export class FakeAdapter implements Adapter {
 
   async stats(): Promise<Record<string, Stats>> {
     return { fake: { version: '0.0.0-fake' } as Stats }
+  }
+}
+
+export class MemxFakeClient extends MemxClient {
+  constructor() {
+    super(new FakeAdapter())
   }
 }

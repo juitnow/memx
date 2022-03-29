@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { FakeAdapter } from '../src/index'
+import { FakeAdapter, MemxFakeClient } from '../src/index'
 import { adapterTests } from './adapter'
 
 describe('Fake Adapter', () => {
@@ -24,6 +24,11 @@ describe('Fake Adapter', () => {
     it('should get the stats', async () => {
       const stats = await adapter.stats()
       expect(stats).to.eql({ fake: { version: '0.0.0-fake' } })
+    })
+
+    it('should expose a fake client', async () => {
+      const client = new MemxFakeClient()
+      expect(client.adapter).to.be.instanceof(FakeAdapter)
     })
   })
 })
