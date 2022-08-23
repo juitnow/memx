@@ -120,8 +120,8 @@ function fromBuffer<T extends Serializable>(result: AdapterResult): ClientResult
 
 /** Create a {@link NodeJS.TypedArray} copying the contents of its source {@link Buffer} */
 function makeTypedArray<T extends NodeJS.TypedArray>(
-  constructor: TypedArrayConstructor<T>,
-  source: Buffer,
+    constructor: TypedArrayConstructor<T>,
+    source: Buffer,
 ): T {
   const clone = Buffer.from(source)
   const { buffer, byteOffset, byteLength } = clone
@@ -227,25 +227,25 @@ export class MemxClient {
   }
 
   append(
-    key: string,
-    value: Appendable,
-    options?: { cas?: bigint },
+      key: string,
+      value: Appendable,
+      options?: { cas?: bigint },
   ): Promise<boolean> {
     return this.#adapter.append(this.#prefix + key, ...toBuffer(value, options))
   }
 
   prepend(
-    key: string,
-    value: Appendable,
-    options?: { cas?: bigint },
+      key: string,
+      value: Appendable,
+      options?: { cas?: bigint },
   ): Promise<boolean> {
     return this.#adapter.prepend(this.#prefix + key, ...toBuffer(value, options))
   }
 
   async increment(
-    key: string,
-    delta?: bigint | number,
-    options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
+      key: string,
+      delta?: bigint | number,
+      options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | undefined> {
     const counter = await this.#adapter.increment(this.#prefix + key, delta, options)
 
@@ -257,9 +257,9 @@ export class MemxClient {
   }
 
   async decrement(
-    key: string,
-    delta?: bigint | number,
-    options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
+      key: string,
+      delta?: bigint | number,
+      options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | undefined> {
     const counter = await this.#adapter.decrement(this.#prefix + key, delta, options)
 
@@ -271,15 +271,15 @@ export class MemxClient {
   }
 
   touch(
-    key: string,
-    ttl?: number,
+      key: string,
+      ttl?: number,
   ): Promise<boolean> {
     return this.#adapter.touch(this.#prefix + key, ttl)
   }
 
   delete(
-    key: string,
-    options?: { cas?: bigint },
+      key: string,
+      options?: { cas?: bigint },
   ): Promise<boolean> {
     return this.#adapter.delete(this.#prefix + key, options)
   }

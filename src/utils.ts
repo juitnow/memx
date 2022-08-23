@@ -122,8 +122,8 @@ export class PoorManLock {
   }
 
   async execute<T>(
-    executor: () => T | Promise<T>,
-    options?: { timeout?: number, owner?: string },
+      executor: () => T | Promise<T>,
+      options?: { timeout?: number, owner?: string },
   ): Promise<T> {
     const { timeout = 5000, owner = false } = options || {}
     const end = Date.now() + timeout

@@ -43,7 +43,7 @@ export class FakeAdapter implements Adapter {
   }
 
   async get(
-    key: string,
+      key: string,
   ): Promise<AdapterResult | undefined> {
     const entry = this.#get(key)
     if (! entry) return
@@ -57,8 +57,8 @@ export class FakeAdapter implements Adapter {
   }
 
   async gat(
-    key: string,
-    ttl: number,
+      key: string,
+      ttl: number,
   ): Promise<AdapterResult | undefined> {
     const entry = this.#get(key)
     if (! entry) return
@@ -74,8 +74,8 @@ export class FakeAdapter implements Adapter {
   }
 
   async touch(
-    key: string,
-    ttl: number,
+      key: string,
+      ttl: number,
   ): Promise<boolean> {
     const entry = this.#get(key)
     if (entry) entry.exp = toExp(ttl)
@@ -83,9 +83,9 @@ export class FakeAdapter implements Adapter {
   }
 
   async set(
-    key: string,
-    value: Buffer,
-    options: { flags?: number; cas?: bigint; ttl?: number } = {},
+      key: string,
+      value: Buffer,
+      options: { flags?: number; cas?: bigint; ttl?: number } = {},
   ): Promise<bigint | undefined> {
     const entry = this.#get(key)
     if (entry && (options.cas !== undefined) && (entry.cas !== options.cas)) {
@@ -96,27 +96,27 @@ export class FakeAdapter implements Adapter {
   }
 
   async add(
-    key: string,
-    value: Buffer,
-    options: { flags?: number; ttl?: number } = {},
+      key: string,
+      value: Buffer,
+      options: { flags?: number; ttl?: number } = {},
   ): Promise<bigint | undefined> {
     if (this.#get(key)) return
     return this.#set(key, value, options.flags, options.ttl)
   }
 
   async replace(
-    key: string,
-    value: Buffer,
-    options: { flags?: number; cas?: bigint; ttl?: number } = {},
+      key: string,
+      value: Buffer,
+      options: { flags?: number; cas?: bigint; ttl?: number } = {},
   ): Promise<bigint | undefined> {
     if (! this.#get(key)) return
     return this.#set(key, value, options.flags, options.ttl)
   }
 
   async append(
-    key: string,
-    value: Buffer,
-    options: { cas?: bigint } = {},
+      key: string,
+      value: Buffer,
+      options: { cas?: bigint } = {},
   ): Promise<boolean> {
     const entry = this.#get(key)
     if (! entry) return false
@@ -128,9 +128,9 @@ export class FakeAdapter implements Adapter {
   }
 
   async prepend(
-    key: string,
-    value: Buffer,
-    options: { cas?: bigint } = {},
+      key: string,
+      value: Buffer,
+      options: { cas?: bigint } = {},
   ): Promise<boolean> {
     const entry = this.#get(key)
     if (! entry) return false
@@ -142,9 +142,9 @@ export class FakeAdapter implements Adapter {
   }
 
   async #counter(
-    key: string,
-    delta: number | bigint,
-    options: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean },
+      key: string,
+      delta: number | bigint,
+      options: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean },
   ): Promise<Counter | undefined> {
     const entry = this.#get(key)
 
@@ -170,24 +170,24 @@ export class FakeAdapter implements Adapter {
   }
 
   increment(
-    key: string,
-    delta: number | bigint = 1n,
-    options: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean } = {},
+      key: string,
+      delta: number | bigint = 1n,
+      options: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean } = {},
   ): Promise<Counter | undefined> {
     return this.#counter(key, delta, options)
   }
 
   decrement(
-    key: string,
-    delta: number | bigint = 1n,
-    options: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean } = {},
+      key: string,
+      delta: number | bigint = 1n,
+      options: { initial?: number | bigint; cas?: bigint; ttl?: number; create?: boolean } = {},
   ): Promise<Counter | undefined> {
     return this.#counter(key, -delta, options)
   }
 
   async delete(
-    key: string,
-    options: { cas?: bigint } = {},
+      key: string,
+      options: { cas?: bigint } = {},
   ): Promise<boolean> {
     const entry = this.#get(key)
     if (entry && (options.cas !== undefined) && (entry.cas !== options.cas)) {
@@ -198,7 +198,7 @@ export class FakeAdapter implements Adapter {
   }
 
   async flush(
-    ttl?: number,
+      ttl?: number,
   ): Promise<void> {
     if (! ttl) return this.#cache.clear()
 
