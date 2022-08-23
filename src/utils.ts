@@ -79,6 +79,7 @@ export class Bundle<T extends Serializable = Serializable> {
     const result = await this.#client.getc<T>(`${this.#name}:${key}`)
     if (result) return result.value
     await this.#removeKey(key)
+    return undefined
   }
 
   async delete(key: string): Promise<void> {
