@@ -16,7 +16,7 @@ function replacer(this: any, key: string, value: any): any {
 }
 
 /** JSON reviver function deserializing `bigint`, {@link Date}, {@link Set} and {@link Map}. */
-function reviver(this: any, key: string, value: any): any {
+function reviver(this: any, _key: string, value: any): any {
   if (Array.isArray(value)) {
     switch (value[0]) {
       case '\0__$BIGINT$__\0': return BigInt(value[1])
