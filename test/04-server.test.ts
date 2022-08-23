@@ -1,3 +1,5 @@
+import './.setup'
+
 import { expect } from 'chai'
 import { ServerAdapter } from '../src/index'
 

@@ -1,3 +1,5 @@
+import './.setup'
+
 import { expect } from 'chai'
 import { randomBytes } from 'crypto'
 import { Bundle, MemxClient, Factory, PoorManLock } from '../src/index'

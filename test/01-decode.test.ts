@@ -1,3 +1,5 @@
+import './.setup'
+
 import { decode, constants } from '../src/index'
 import { expect } from 'chai'
 import { randomFillSync } from 'crypto'

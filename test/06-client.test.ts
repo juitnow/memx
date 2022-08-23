@@ -1,3 +1,5 @@
+import './.setup'
+
 import { AssertionError } from 'assert'
 import { expect } from 'chai'
 import { randomBytes } from 'crypto'
