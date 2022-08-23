@@ -1,8 +1,6 @@
 *.tgz
-.nyc_output/
+.coverage-data/
 .vscode/
-build/
 coverage/
 dist/
-index.d.ts
 node_modules/
