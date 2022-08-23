@@ -1,4 +1,4 @@
-import { EventEmitter } from 'stream'
+import { EventEmitter } from 'node:events'
 
 export class FakeSocket extends EventEmitter {
   destroyed = true
