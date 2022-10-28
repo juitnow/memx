@@ -34,5 +34,10 @@
   },
   "directories": {
     "test": "test"
-  }
+  },
+  "files": [
+    "*.md",
+    "dist/",
+    "src/"
+  ]
 }
