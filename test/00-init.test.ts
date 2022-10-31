@@ -1,5 +1,6 @@
-import { log } from '@plugjs/plug'
 import { spawn } from 'node:child_process'
+
+import { log } from '@plugjs/plug'
 
 before(() => {
   return new Promise<void>((resolve, reject) => {

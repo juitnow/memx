@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 
 import memjs from 'memjs'
+
 import { ServerAdapter } from '../src/index'
 
 const m = memjs.Client.create('127.0.0.1:11211')

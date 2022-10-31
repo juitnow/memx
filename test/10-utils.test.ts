@@ -1,7 +1,8 @@
-import './.setup'
+import { randomBytes } from 'node:crypto'
 
 import { expect } from 'chai'
-import { randomBytes } from 'crypto'
+
+
 import { Bundle, MemxClient, Factory, PoorManLock } from '../src/index'
 
 describe('Utilities', () => {

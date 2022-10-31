@@ -1,7 +1,8 @@
-import { expect } from 'chai'
-import { randomBytes } from 'crypto'
+import { randomBytes } from 'node:crypto'
 
-import { Adapter } from '../src/index'
+import { expect } from 'chai'
+
+import type { Adapter } from '../src/index'
 
 export function adapterTests(client: Adapter): void {
   let key: string

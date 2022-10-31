@@ -1,9 +1,11 @@
-import './.setup'
+import { AssertionError } from 'node:assert'
+import { randomBytes } from 'node:crypto'
 
-import { AssertionError } from 'assert'
 import { expect } from 'chai'
-import { randomBytes } from 'crypto'
-import { Adapter, MemxClient, ClusterAdapter, ServerAdapter } from '../src/index'
+
+import { MemxClient, ClusterAdapter, ServerAdapter } from '../src/index'
+
+import type { Adapter } from '../src/index'
 
 describe('Memcached Client', () => {
   const host = process.env.MEMCACHED_HOST || '127.0.0.1'

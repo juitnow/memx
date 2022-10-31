@@ -1,9 +1,9 @@
-import type { Socket } from 'net'
-
-import assert from 'assert'
-import { types } from 'util'
+import assert from 'node:assert'
+import { types } from 'node:util'
 
 import { FLAGS } from './constants'
+
+import type { Socket } from 'node:net'
 
 /* coverage ignore next */
 export const socketFinalizationRegistry = new FinalizationRegistry((socket: Socket): void => {

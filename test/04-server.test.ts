@@ -1,8 +1,6 @@
-import './.setup'
-
 import { expect } from 'chai'
-import { ServerAdapter } from '../src/index'
 
+import { ServerAdapter } from '../src/index'
 import { adapterTests } from './adapter'
 import { FakeSocket } from './fake-socket'
 

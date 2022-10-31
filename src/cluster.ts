@@ -1,6 +1,9 @@
-import { Adapter, Counter, AdapterResult, Stats } from './types'
-import { ServerAdapter, ServerOptions } from './server'
-import assert from 'assert'
+import assert from 'node:assert'
+
+import { ServerAdapter } from './server'
+
+import type { Adapter, Counter, AdapterResult, Stats } from './types'
+import type { ServerOptions } from './server'
 
 function parseHosts(hosts?: string): ServerOptions[] {
   const result: { host: string, port?: number }[] = []

@@ -1,5 +1,8 @@
-import { allocateBuffer, RecyclableBuffer } from './buffers'
-import { DATA_TYPE, EMPTY_BUFFER, MAGIC, VBUCKET, OPCODE, OFFSETS } from './constants'
+import { allocateBuffer } from './buffers'
+import { DATA_TYPE, EMPTY_BUFFER, MAGIC, VBUCKET, OFFSETS } from './constants'
+
+import type { RecyclableBuffer } from './buffers'
+import type { OPCODE } from './constants'
 
 // Writing the full header would be like
 // header.writeUInt8       (magic,         0)

@@ -1,7 +1,9 @@
-import { Adapter, Counter, AdapterResult, Stats } from './types'
-import { Connection, ConnectionOptions } from './connection'
+import { Connection } from './connection'
 import { BUFFERS, OPCODE, STATUS } from './constants'
-import { RawIncomingPacket } from './decode'
+
+import type { Adapter, Counter, AdapterResult, Stats } from './types'
+import type { ConnectionOptions } from './connection'
+import type { RawIncomingPacket } from './decode'
 
 const statsBigInt: readonly string[] = [
   'auth_cmds', 'auth_errors', 'bytes', 'bytes_read', 'bytes_written', 'cas_badval', 'cas_hits', 'cas_misses',

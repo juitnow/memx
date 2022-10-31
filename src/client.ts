@@ -1,10 +1,12 @@
-import assert from 'assert'
-import { types } from 'util'
+import assert from 'node:assert'
+import { types } from 'node:util'
 
-import { ClusterAdapter, ClusterOptions } from './cluster'
+import { ClusterAdapter } from './cluster'
 import { EMPTY_BUFFER, FLAGS } from './constants'
 import { typedArrayFlags } from './internals'
-import { Adapter, AdapterResult, Counter, Stats } from './types'
+
+import type { ClusterOptions } from './cluster'
+import type { Adapter, AdapterResult, Counter, Stats } from './types'
 
 /** JSON replacere function serializing `bigint`, {@link Date}, {@link Set} and {@link Map}. */
 function replacer(this: any, key: string, value: any): any {

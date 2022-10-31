@@ -1,8 +1,10 @@
 /* eslint-disable no-console */
 
-import assert from 'assert'
-import { MemxClient, Serializable } from './client'
+import assert from 'node:assert'
+
 import { logPromiseError } from './internals'
+
+import type { MemxClient, Serializable } from './client'
 
 export class Factory<T extends Serializable> {
   #factory: (key: string) => T | Promise<T>

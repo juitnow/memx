@@ -1,12 +1,11 @@
-import './.setup'
+import { AssertionError } from 'node:assert'
 
-import { AssertionError } from 'assert'
 import { expect } from 'chai'
+
 import { connection, constants } from '../src/index'
+import { FakeSocket } from './fake-socket'
 
 /* ========================================================================== */
-
-import { FakeSocket } from './fake-socket'
 
 const Connection = connection.Connection as {
   new (options?: any): connection.Connection

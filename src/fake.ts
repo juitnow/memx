@@ -1,5 +1,6 @@
-import { Adapter, AdapterResult, Counter, Stats } from './types'
 import { MemxClient } from './client'
+
+import type { Adapter, AdapterResult, Counter, Stats } from './types'
 
 interface Entry {
   value: Buffer,

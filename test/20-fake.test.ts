@@ -1,6 +1,5 @@
-import './.setup'
-
 import { expect } from 'chai'
+
 import { FakeAdapter, MemxFakeClient } from '../src/index'
 import { adapterTests } from './adapter'
 

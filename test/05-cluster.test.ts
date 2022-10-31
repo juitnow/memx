@@ -1,9 +1,11 @@
-import './.setup'
+import { AssertionError } from 'node:assert'
+import { randomBytes } from 'node:crypto'
 
-import { AssertionError } from 'assert'
 import { expect } from 'chai'
-import { randomBytes } from 'crypto'
-import { ClusterAdapter, ServerAdapter, ServerOptions } from '../src/index'
+
+import { ClusterAdapter, ServerAdapter } from '../src/index'
+
+import type { ServerOptions } from '../src/index'
 
 function check(cluster: ClusterAdapter, servers: Required<ServerOptions>[]): void {
   expect(cluster.servers).to.be.an('array')

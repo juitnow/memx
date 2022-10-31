@@ -1,6 +1,9 @@
+import assert from 'node:assert'
+
 import { DATA_TYPE, EMPTY_BUFFER, MAGIC, OFFSETS } from './constants'
-import assert from 'assert'
-import { allocateBuffer, RecyclableBuffer } from './buffers'
+import { allocateBuffer } from './buffers'
+
+import type { RecyclableBuffer } from './buffers'
 
 // Reading the full header would be like
 // const magic =         header.readUInt8        (0)

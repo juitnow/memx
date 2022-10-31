@@ -1,8 +1,9 @@
-import './.setup'
+import { randomFillSync } from 'node:crypto'
+
+import { expect } from 'chai'
 
 import { decode, constants } from '../src/index'
-import { expect } from 'chai'
-import { randomFillSync } from 'crypto'
+
 
 describe('Decoding Packets', () => {
   const processed: decode.RawIncomingPacket[] = []
