@@ -1,29 +1,55 @@
 import { spawn } from 'node:child_process'
+import { createInterface } from 'node:readline'
 
 import { log } from '@plugjs/plug'
+import chai from 'chai'
+import chap from 'chai-as-promised'
+import chae from 'chai-exclude'
 
-before(() => {
+import type { ChildProcess } from 'node:child_process'
+
+let child: ChildProcess | undefined = undefined
+
+chai.use(chap).use(chae)
+
+beforeAll(() => {
   return new Promise<void>((resolve, reject) => {
-    log('Starting "memcached"')
+    const childProcess = spawn('memcached', { stdio: 'pipe' })
 
-    const child = spawn('memcached', { stdio: 'inherit' })
+    const stdout = createInterface(childProcess.stdout)
+    const stderr = createInterface(childProcess.stderr)
+    stdout.on('line', (line) => log.notice(line))
+    stderr.on('line', (line) => log.warn(line))
 
     const timeout = setTimeout(() => {
-      after(() => {
-        log('Terminating "memcached"')
-        child.kill()
-      })
+      log('Started "memcached" processs with PID', childProcess.pid)
+      child = childProcess
       resolve()
     }, 1000)
 
-    child.on('error', (err) => {
+    childProcess.on('error', (error: Error) => {
       clearTimeout(timeout)
-      reject(err)
+      child = undefined
+      reject(error)
     })
 
-    child.on('exit', (code, signal) => {
+    childProcess.on('exit', (code: number, signal: string) => {
       clearTimeout(timeout)
       return reject(new Error(`Memcached exited with ${signal || code}`))
     })
+  })
+})
+
+afterAll(() => {
+  if (! child) throw new Error('Memcached server never started')
+
+  log('\nStopping "memcached" process running with PID', child.pid)
+  const childProcess = child
+  child = undefined
+
+  return new Promise((resolve, reject) => {
+    childProcess.on('exit', resolve)
+    childProcess.on('error', reject)
+    childProcess.kill()
   })
 })
