@@ -39,10 +39,7 @@ export function adapterTests(client: Adapter): void {
       })
     })
 
-    it('should set a value with ttl and get it back', async function() {
-      this.timeout(10000)
-      this.slow(3000)
-
+    it('should set a value with ttl and get it back', async () => {
       const cas = await client.set(key, value, { ttl: 1 })
       expect(cas).to.be.a('bigint')
 
@@ -55,9 +52,9 @@ export function adapterTests(client: Adapter): void {
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       expect(await client.get(key)).to.be.undefined
-    })
+    }, 10000)
 
-    it('should set and get a value with cas', async function() {
+    it('should set and get a value with cas', async () => {
       const cas = await client.set(key, value)
       expect(cas).to.be.a('bigint')
 
@@ -87,10 +84,7 @@ export function adapterTests(client: Adapter): void {
       })
     })
 
-    it('should get and touch (gat) a value', async function() {
-      this.timeout(10000)
-      this.slow(3000)
-
+    it('should get and touch (gat) a value', async () => {
       expect(await client.gat(key, 0)).to.be.undefined
 
       const cas = await client.set(key, value)
@@ -107,12 +101,9 @@ export function adapterTests(client: Adapter): void {
 
       await new Promise((resolve) => setTimeout(resolve, 2000))
       expect(await client.get(key)).to.be.undefined
-    })
+    }, 10000)
 
-    it('should change the ttl of a value', async function() {
-      this.timeout(10000)
-      this.slow(3000)
-
+    it('should change the ttl of a value', async () => {
       expect(await client.touch(key, 1)).to.eql(false)
 
       const cas = await client.set(key, value)
@@ -127,7 +118,7 @@ export function adapterTests(client: Adapter): void {
 
       await new Promise((resolve) => setTimeout(resolve, 2000))
       expect(await client.get(key)).to.be.undefined
-    })
+    }, 10000)
 
     it('should get and set a super-long value', async () => {
       const longValue = randomBytes(128 * 1024) // yes, 128kb
@@ -159,10 +150,7 @@ export function adapterTests(client: Adapter): void {
       await expect(client.set(goodKey, value)).to.be.fulfilled
     })
 
-    it('should work across multiple requests in parallel', async function() {
-      this.timeout(80000)
-      this.slow(2000)
-
+    it('should work across multiple requests in parallel', async () => {
       const data: [ string, Buffer ][] = []
       for (let i = 0; i < 10000; i++) {
         data.push([ randomBytes(16).toString('hex'), randomBytes(128) ])
@@ -178,7 +166,7 @@ export function adapterTests(client: Adapter): void {
       const gets = await Promise.all(getPromises)
       expect(gets).to.be.an('array').with.length(data.length)
       gets.forEach((result, i) => expect(result?.value).to.eql(data[i][1]))
-    })
+    }, 80000)
   })
 
   /* ======================================================================== */
@@ -372,10 +360,7 @@ export function adapterTests(client: Adapter): void {
           .to.be.rejectedWith(Error, `(status=NON_NUMERIC_VALUE, key=${key})`)
     })
 
-    it('should create a counter with a ttl', async function() {
-      this.timeout(10000)
-      this.slow(3000)
-
+    it('should create a counter with a ttl', async () => {
       const ctr = await(client.increment(key, 1, { initial: 0n, ttl: 1 }))
       expect(ctr).to.eql({
         value: 0n,
@@ -386,7 +371,7 @@ export function adapterTests(client: Adapter): void {
 
       await new Promise((resolve) => setTimeout(resolve, 2000))
       expect(await client.get(key)).to.be.undefined
-    })
+    }, 10000)
   })
 
   /* ======================================================================== */
@@ -445,10 +430,7 @@ export function adapterTests(client: Adapter): void {
       expect(await client.get(key)).to.be.undefined
     })
 
-    it('should flush caches with a timeout', async function() {
-      this.timeout(10000)
-      this.slow(4000)
-
+    it('should flush caches with a timeout', async () => {
       const cas = await client.set(key, value)
       expect(cas).to.be.a('bigint')
 
@@ -467,6 +449,6 @@ export function adapterTests(client: Adapter): void {
 
       await new Promise((resolve) => setTimeout(resolve, 3000))
       expect(await client.get(key)).to.be.undefined
-    })
+    }, 10000)
   })
 }

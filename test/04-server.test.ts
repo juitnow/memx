@@ -41,9 +41,7 @@ describe('Server Adapter', () => {
       expect(await client.noop()).to.be.undefined
     })
 
-    it('should quit and reconnect', async function() {
-      this.slow(200)
-
+    it('should quit and reconnect', async () => {
       expect(client.connected).to.be.true
 
       expect(await client.quit()).to.be.undefined

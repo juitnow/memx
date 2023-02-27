@@ -178,10 +178,7 @@ describe('Utilities', () => {
   })
 
   describe('poor man lock', () => {
-    it('should lock', async function() {
-      this.timeout(3000)
-      this.slow(2000)
-
+    it('should lock', async () => {
       const lock = new PoorManLock(client, key)
       const record: string[] = []
 
@@ -209,12 +206,9 @@ describe('Utilities', () => {
       // lock should be cleared
       expect((await client.getc(key))?.value).to.be.undefined
       expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1', 'execute 2' ])
-    })
+    }, 3000)
 
-    it('should timeout while acquiring an anonymous lock', async function() {
-      this.timeout(3000)
-      this.slow(2000)
-
+    it('should timeout while acquiring an anonymous lock', async () => {
       const lock = new PoorManLock(client, key)
       const record: string[] = []
 
@@ -245,12 +239,9 @@ describe('Utilities', () => {
 
       expect((await client.getc(key))?.value).to.be.undefined
       expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
-    })
+    }, 3000)
 
-    it('should timeout while acquiring a named lock', async function() {
-      this.timeout(3000)
-      this.slow(2000)
-
+    it('should timeout while acquiring a named lock', async () => {
       const lock = new PoorManLock(client, key)
       const record: string[] = []
 
@@ -281,6 +272,6 @@ describe('Utilities', () => {
 
       expect((await client.getc(key))?.value).to.be.undefined
       expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
-    })
+    }, 3000)
   })
 })

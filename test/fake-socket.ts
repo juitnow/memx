@@ -33,7 +33,7 @@ export class FakeSocket extends EventEmitter {
     return this
   }
 
-  $write(string: string, callback: (error?: Error) => void): void {
+  $write(_string: string, callback: (error?: Error) => void): void {
     callback(new Error('Write Error'))
   }
 
