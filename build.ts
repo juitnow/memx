@@ -1,3 +1,3 @@
-import { tasks } from '@juitnow/build'
+import { tasks } from '@plugjs/build'
 
 export default tasks()
