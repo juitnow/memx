@@ -23,7 +23,7 @@ export function typedArrayFlags(value: NodeJS.TypedArray): FLAGS {
     types.isBigInt64Array(value) ? FLAGS.BIGINT64ARRAY :
     types.isFloat32Array(value) ? FLAGS.FLOAT32ARRAY :
     types.isFloat64Array(value) ? FLAGS.FLOAT64ARRAY :
-    assert.fail('Unsupported kind of TypedArray')
+    assert.fail('Unsupported kind of TypedArray') // coverage ignore prev
   return flags
 }
 

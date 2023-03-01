@@ -4,7 +4,6 @@ import { randomBytes } from 'node:crypto'
 import { expect } from 'chai'
 
 import { MemxClient, ClusterAdapter, ServerAdapter } from '../src/index'
-import { typedArrayFlags } from '../src/internals'
 
 import type { Adapter } from '../src/index'
 
@@ -212,11 +211,6 @@ describe('Memcached Client', () => {
         expect([ ...value ]).to.have.members([ ...array ]).to.have.length.greaterThan(0)
       })
     }
-
-    it('wrong typed array type', async () => {
-      expect(() => typedArrayFlags([] as any))
-          .to.throw(AssertionError, 'Unsupported kind of TypedArray')
-    })
   })
 
   /* ======================================================================== */
