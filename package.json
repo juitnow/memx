@@ -1,11 +1,11 @@
 {
   "name": "memx",
   "version": "0.2.0",
+  "type": "module",
   "description": "Simple and fast memcached client",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "type": "commonjs",
   "exports": {
     ".": {
       "require": {
