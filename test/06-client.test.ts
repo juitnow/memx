@@ -179,7 +179,14 @@ describe('Memcached Client', () => {
   describe('buffers and typed arrays', () => {
     const buffer = randomBytes(128)
 
-    const tests = {
+    it('Buffer', async () => {
+      const set = await client.set(key, buffer)
+      const { value, cas } = await client.getc(key) || {}
+      expect(cas).to.equal(set)
+      expect(Buffer.compare(value as any, buffer)).to.equal(0)
+    })
+
+    const intTests = {
       Uint8Array: Uint8Array,
       Uint8ClampedArray: Uint8ClampedArray,
       Uint16Array: Uint16Array,
@@ -189,20 +196,32 @@ describe('Memcached Client', () => {
       Int32Array: Int32Array,
       BigUint64Array: BigUint64Array,
       BigInt64Array: BigInt64Array,
+    } as const
+
+    for (const [ test, TypedArray ] of Object.entries(intTests)) {
+      it(test, async () => {
+        const array = new TypedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength / 8)
+        const set = await client.set(key, array)
+        const { value, cas } = await client.getc(key) || {} as any
+        expect(cas).to.equal(set)
+        expect(value).to.be.instanceOf(TypedArray)
+        expect(value.length).to.equal(array.length).to.be.greaterThan(0)
+        expect([ ...value ]).to.have.members([ ...array ]).to.have.length.greaterThan(0)
+      })
+    }
+
+    // floats are different... random _bytes_ might create NaNs
+
+    const floatTests = {
       Float32Array: Float32Array,
       Float64Array: Float64Array,
     } as const
 
-    it('Buffer', async () => {
-      const set = await client.set(key, buffer)
-      const { value, cas } = await client.getc(key) || {}
-      expect(cas).to.equal(set)
-      expect(Buffer.compare(value as any, buffer)).to.equal(0)
-    })
-
-    for (const [ test, TypedArray ] of Object.entries(tests)) {
+    for (const [ test, TypedArray ] of Object.entries(floatTests)) {
       it(test, async () => {
-        const array = new TypedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength / 8)
+        const array = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 8)
+        for (let i = 0; i < array.length; i ++) array[i] = Math.random()
+
         const set = await client.set(key, array)
         const { value, cas } = await client.getc(key) || {} as any
         expect(cas).to.equal(set)
