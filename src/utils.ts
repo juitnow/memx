@@ -144,8 +144,12 @@ export class PoorManLock {
       throw new Error(`Lock "${this.#client.prefix}${this.#name}" timeout (owner=${owner})`)
     }
 
+    // the replacer runs asynchronously and sets the last "cas"... if our
+    // code ends while this is running, we effectively loose our "cas" and
+    // never delete the lock... simply store all these promises...
+    let promise: Promise<void> = Promise.resolve()
     const interval = setInterval(() => {
-      void logPromiseError((async (): Promise<void> => {
+      promise = logPromiseError((async (): Promise<void> => {
         const replaced = await this.#client.replace(this.#name, owner, { ttl: 2, cas })
         assert(replaced !== undefined, `Lock "${this.#client.prefix}${this.#name}" not replaced`)
         cas = replaced
@@ -156,9 +160,11 @@ export class PoorManLock {
       return await executor()
     } finally {
       clearInterval(interval)
+      await promise // await for any running replacer
       await logPromiseError(
           this.#client.delete(this.#name, { cas }),
-          `Error deleting lock "${this.#client.prefix}${this.#name}"`)
+          `Error deleting lock "${this.#client.prefix}${this.#name}"`,
+      )
     }
   }
 }
