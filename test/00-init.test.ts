@@ -13,10 +13,10 @@ let child: ChildProcess | undefined = undefined
 chai.use(chap).use(chae)
 
 beforeAll(() => {
-  return new Promise<void>((resolve, reject) => {
-    // do not spawn local "memcached" on GitHub
-    if (process.env.GITHUB_ACTIONS) return
+  // do not spawn local "memcached" on GitHub
+  if (process.env.GITHUB_ACTIONS) return
 
+  return new Promise<void>((resolve, reject) => {
     const childProcess = spawn('memcached', { stdio: 'pipe' })
 
     const stdout = createInterface(childProcess.stdout)
