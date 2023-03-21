@@ -5,25 +5,24 @@ on:
 
 jobs:
   build-pr:
+    runs-on: ubuntu-latest
     name: Build Pull Request
-    uses: juitnow/workflows-public/.github/workflows/build.yml@main
-    secrets: inherit
     services:
       memcached:
         image: memcached:latest
         ports:
           - 11211:11211/tcp
-    # steps:
-    #   - name: Checkout Repository
-    #     uses: actions/checkout@v3
-    #     with:
-    #       token: ${{ secrets.git_token || github.token }}
-    #   - name: Setup NodeJS
-    #     uses: actions/setup-node@v3
-    #     with:
-    #       node-version: 18.x
-    #       registry-url: https://registry.npmjs.org
-    #   - name: Build Package
-    #     run: |
-    #       npm clean-install
-    #       npm run build
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.git_token || github.token }}
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          registry-url: https://registry.npmjs.org
+      - name: Build Package
+        run: |
+          npm clean-install
+          npm run build
