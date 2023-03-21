@@ -219,7 +219,7 @@ describe('Memcached Client', () => {
 
     for (const [ test, TypedArray ] of Object.entries(floatTests)) {
       it(test, async () => {
-        const array = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 8)
+        const array = new TypedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength / 8)
         for (let i = 0; i < array.length; i ++) array[i] = Math.random()
 
         const set = await client.set(key, array)
