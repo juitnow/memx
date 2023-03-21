@@ -1,4 +1,4 @@
-import { EventEmitter } from 'stream'
+import { EventEmitter } from 'node:events'
 
 export class FakeSocket extends EventEmitter {
   destroyed = true
@@ -33,7 +33,7 @@ export class FakeSocket extends EventEmitter {
     return this
   }
 
-  $write(string: string, callback: (error?: Error) => void): void {
+  $write(_string: string, callback: (error?: Error) => void): void {
     callback(new Error('Write Error'))
   }
 

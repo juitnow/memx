@@ -1,10 +1,11 @@
-import { AssertionError } from 'assert'
+import { AssertionError } from 'node:assert'
+
 import { expect } from 'chai'
+
 import { connection, constants } from '../src/index'
+import { FakeSocket } from './fake-socket'
 
 /* ========================================================================== */
-
-import { FakeSocket } from './fake-socket'
 
 const Connection = connection.Connection as {
   new (options?: any): connection.Connection
@@ -172,9 +173,7 @@ describe('Connection', () => {
     } ])
   })
 
-  it('should timeout when resoponse is lagging', async function() {
-    this.slow(200)
-
+  it('should timeout when resoponse is lagging', async () => {
     const connection = new Connection({ host, port, timeout: 100, factory: (options: any): any => {
       return new class extends FakeSocket {
         $write(string: string, callback: (error?: Error) => void): void {
@@ -193,9 +192,7 @@ describe('Connection', () => {
     expect(Date.now() - now).to.be.closeTo(100, 10)
   })
 
-  it('should work with a real memcached server', async function() {
-    this.slow(200)
-
+  it('should work with a real memcached server', async () => {
     const connection = new Connection({ host, port })
     expect(connection.connected).to.be.false
 

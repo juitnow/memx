@@ -1,10 +1,12 @@
-import assert from 'assert'
-import { types } from 'util'
+import assert from 'node:assert'
+import { types } from 'node:util'
 
-import { ClusterAdapter, ClusterOptions } from './cluster'
+import { ClusterAdapter } from './cluster'
 import { EMPTY_BUFFER, FLAGS } from './constants'
 import { typedArrayFlags } from './internals'
-import { Adapter, AdapterResult, Counter, Stats } from './types'
+
+import type { ClusterOptions } from './cluster'
+import type { Adapter, AdapterResult, Counter, Stats } from './types'
 
 /** JSON replacere function serializing `bigint`, {@link Date}, {@link Set} and {@link Map}. */
 function replacer(this: any, key: string, value: any): any {
@@ -16,7 +18,7 @@ function replacer(this: any, key: string, value: any): any {
 }
 
 /** JSON reviver function deserializing `bigint`, {@link Date}, {@link Set} and {@link Map}. */
-function reviver(this: any, key: string, value: any): any {
+function reviver(this: any, _key: string, value: any): any {
   if (Array.isArray(value)) {
     switch (value[0]) {
       case '\0__$BIGINT$__\0': return BigInt(value[1])
@@ -120,8 +122,8 @@ function fromBuffer<T extends Serializable>(result: AdapterResult): ClientResult
 
 /** Create a {@link NodeJS.TypedArray} copying the contents of its source {@link Buffer} */
 function makeTypedArray<T extends NodeJS.TypedArray>(
-  constructor: TypedArrayConstructor<T>,
-  source: Buffer,
+    constructor: TypedArrayConstructor<T>,
+    source: Buffer,
 ): T {
   const clone = Buffer.from(source)
   const { buffer, byteOffset, byteLength } = clone
@@ -227,25 +229,25 @@ export class MemxClient {
   }
 
   append(
-    key: string,
-    value: Appendable,
-    options?: { cas?: bigint },
+      key: string,
+      value: Appendable,
+      options?: { cas?: bigint },
   ): Promise<boolean> {
     return this.#adapter.append(this.#prefix + key, ...toBuffer(value, options))
   }
 
   prepend(
-    key: string,
-    value: Appendable,
-    options?: { cas?: bigint },
+      key: string,
+      value: Appendable,
+      options?: { cas?: bigint },
   ): Promise<boolean> {
     return this.#adapter.prepend(this.#prefix + key, ...toBuffer(value, options))
   }
 
   async increment(
-    key: string,
-    delta?: bigint | number,
-    options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
+      key: string,
+      delta?: bigint | number,
+      options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | undefined> {
     const counter = await this.#adapter.increment(this.#prefix + key, delta, options)
 
@@ -257,9 +259,9 @@ export class MemxClient {
   }
 
   async decrement(
-    key: string,
-    delta?: bigint | number,
-    options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
+      key: string,
+      delta?: bigint | number,
+      options?: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | undefined> {
     const counter = await this.#adapter.decrement(this.#prefix + key, delta, options)
 
@@ -271,15 +273,15 @@ export class MemxClient {
   }
 
   touch(
-    key: string,
-    ttl?: number,
+      key: string,
+      ttl?: number,
   ): Promise<boolean> {
     return this.#adapter.touch(this.#prefix + key, ttl)
   }
 
   delete(
-    key: string,
-    options?: { cas?: bigint },
+      key: string,
+      options?: { cas?: bigint },
   ): Promise<boolean> {
     return this.#adapter.delete(this.#prefix + key, options)
   }

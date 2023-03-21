@@ -1,7 +1,11 @@
-import { AssertionError } from 'assert'
+import { AssertionError } from 'node:assert'
+import { randomBytes } from 'node:crypto'
+
 import { expect } from 'chai'
-import { randomBytes } from 'crypto'
-import { Adapter, MemxClient, ClusterAdapter, ServerAdapter } from '../src/index'
+
+import { MemxClient, ClusterAdapter, ServerAdapter } from '../src/index'
+
+import type { Adapter } from '../src/index'
 
 describe('Memcached Client', () => {
   const host = process.env.MEMCACHED_HOST || '127.0.0.1'
@@ -474,10 +478,7 @@ describe('Memcached Client', () => {
       expect((await client.getc('foo:' + key))?.value).to.equal(50n)
     })
 
-    it('touch', async function() {
-      this.timeout(10000)
-      this.slow(3000)
-
+    it('touch', async () => {
       await client.set('foo:' + key, 'foobar')
 
       expect((await prefixed.touch(key, 1))).to.be.true
@@ -485,7 +486,7 @@ describe('Memcached Client', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 2000))
       expect(await client.getc('foo:' + key)).to.be.undefined
-    })
+    }, 10000)
 
     it('delete', async () => {
       await client.set('foo:' + key, 'foobar')

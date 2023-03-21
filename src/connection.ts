@@ -1,10 +1,14 @@
-import assert from 'assert'
-import net, { Socket } from 'net'
+import assert from 'node:assert'
+import net from 'node:net'
 
-import { Encoder, RawOutgoingPacket } from './encode'
-import { Decoder, RawIncomingPacket } from './decode'
+import { Encoder } from './encode'
+import { Decoder } from './decode'
 import { BUFFERS, OPCODE } from './constants'
 import { socketFinalizationRegistry } from './internals'
+
+import type { RawIncomingPacket } from './decode'
+import type { RawOutgoingPacket } from './encode'
+import type { Socket } from 'node:net'
 
 export type RawIncomingPackets = [ RawIncomingPacket, ...RawIncomingPacket[] ]
 

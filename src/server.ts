@@ -1,7 +1,9 @@
-import { Adapter, Counter, AdapterResult, Stats } from './types'
-import { Connection, ConnectionOptions } from './connection'
+import { Connection } from './connection'
 import { BUFFERS, OPCODE, STATUS } from './constants'
-import { RawIncomingPacket } from './decode'
+
+import type { Adapter, Counter, AdapterResult, Stats } from './types'
+import type { ConnectionOptions } from './connection'
+import type { RawIncomingPacket } from './decode'
 
 const statsBigInt: readonly string[] = [
   'auth_cmds', 'auth_errors', 'bytes', 'bytes_read', 'bytes_written', 'cas_badval', 'cas_hits', 'cas_misses',
@@ -108,8 +110,8 @@ export class ServerAdapter implements Adapter {
   /* ======================================================================== */
 
   async #get(
-    key: string,
-    ttl?: number,
+      key: string,
+      ttl?: number,
   ): Promise<AdapterResult | undefined> {
     let keyOffset = 0
     if (ttl !== undefined) keyOffset = this.#buffer.writeUInt32BE(ttl)
@@ -141,21 +143,21 @@ export class ServerAdapter implements Adapter {
   }
 
   async get(
-    key: string,
+      key: string,
   ): Promise<AdapterResult | undefined> {
     return this.#get(key)
   }
 
   async gat(
-    key: string,
-    ttl: number,
+      key: string,
+      ttl: number,
   ): Promise<AdapterResult | undefined> {
     return this.#get(key, ttl || 2592000) // TTL 0 is "invalid arg"
   }
 
   async touch(
-    key: string,
-    ttl?: number,
+      key: string,
+      ttl?: number,
   ): Promise<boolean> {
     const timeToLive = ttl ?? this.#ttl
 
@@ -189,10 +191,10 @@ export class ServerAdapter implements Adapter {
   /* ======================================================================== */
 
   async #sar(
-    opcode: OPCODE.SET | OPCODE.ADD | OPCODE.REPLACE,
-    key: string,
-    value: Buffer,
-    options: { flags?: number, cas?: bigint, ttl?: number },
+      opcode: OPCODE.SET | OPCODE.ADD | OPCODE.REPLACE,
+      key: string,
+      value: Buffer,
+      options: { flags?: number, cas?: bigint, ttl?: number },
   ): Promise<bigint | undefined> {
     const { flags = 0, cas = 0n, ttl = this.#ttl } = options
 
@@ -229,25 +231,25 @@ export class ServerAdapter implements Adapter {
   }
 
   set(
-    key: string,
-    value: Buffer,
-    options: { flags?: number, cas?: bigint, ttl?: number } = {},
+      key: string,
+      value: Buffer,
+      options: { flags?: number, cas?: bigint, ttl?: number } = {},
   ): Promise<bigint | undefined> {
     return this.#sar(OPCODE.SET, key, value, options)
   }
 
   add(
-    key: string,
-    value: Buffer,
-    options: { flags?: number, ttl?: number } = {},
+      key: string,
+      value: Buffer,
+      options: { flags?: number, ttl?: number } = {},
   ): Promise<bigint | undefined> {
     return this.#sar(OPCODE.ADD, key, value, options)
   }
 
   replace(
-    key: string,
-    value: Buffer,
-    options: { flags?: number, cas?: bigint, ttl?: number } = {},
+      key: string,
+      value: Buffer,
+      options: { flags?: number, cas?: bigint, ttl?: number } = {},
   ): Promise<bigint | undefined> {
     return this.#sar(OPCODE.REPLACE, key, value, options)
   }
@@ -255,10 +257,10 @@ export class ServerAdapter implements Adapter {
   /* ======================================================================== */
 
   async #pend(
-    opcode: OPCODE.APPEND | OPCODE.PREPEND,
-    key: string,
-    value: Buffer,
-    options: { cas?: bigint },
+      opcode: OPCODE.APPEND | OPCODE.PREPEND,
+      key: string,
+      value: Buffer,
+      options: { cas?: bigint },
   ): Promise<boolean> {
     const { cas = 0n } = options
 
@@ -289,17 +291,17 @@ export class ServerAdapter implements Adapter {
   }
 
   append(
-    key: string,
-    value: Buffer,
-    options: { cas?: bigint } = {},
+      key: string,
+      value: Buffer,
+      options: { cas?: bigint } = {},
   ): Promise<boolean> {
     return this.#pend(OPCODE.APPEND, key, value, options)
   }
 
   prepend(
-    key: string,
-    value: Buffer,
-    options: { cas?: bigint } = {},
+      key: string,
+      value: Buffer,
+      options: { cas?: bigint } = {},
   ): Promise<boolean> {
     return this.#pend(OPCODE.PREPEND, key, value, options)
   }
@@ -307,10 +309,10 @@ export class ServerAdapter implements Adapter {
   /* ======================================================================== */
 
   async #counter(
-    opcode: OPCODE.INCREMENT | OPCODE.DECREMENT,
-    key: string,
-    delta: bigint | number,
-    options: { initial?: bigint | number, cas?: bigint, ttl?: number },
+      opcode: OPCODE.INCREMENT | OPCODE.DECREMENT,
+      key: string,
+      delta: bigint | number,
+      options: { initial?: bigint | number, cas?: bigint, ttl?: number },
   ): Promise<Counter | undefined> {
     const {
       initial,
@@ -354,17 +356,17 @@ export class ServerAdapter implements Adapter {
   }
 
   increment(
-    key: string,
-    delta: bigint | number = 1,
-    options: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean } = {},
+      key: string,
+      delta: bigint | number = 1,
+      options: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean } = {},
   ): Promise<Counter | undefined> {
     return this.#counter(OPCODE.INCREMENT, key, delta, options)
   }
 
   decrement(
-    key: string,
-    delta: bigint | number = 1,
-    options: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean } = {},
+      key: string,
+      delta: bigint | number = 1,
+      options: { initial?: bigint | number, cas?: bigint, ttl?: number, create?: boolean } = {},
   ): Promise<Counter | undefined> {
     return this.#counter(OPCODE.DECREMENT, key, delta, options)
   }
@@ -372,8 +374,8 @@ export class ServerAdapter implements Adapter {
   /* ======================================================================== */
 
   async delete(
-    key: string,
-    options: { cas?: bigint } = {},
+      key: string,
+      options: { cas?: bigint } = {},
   ): Promise<boolean> {
     const { cas = 0n } = options
 

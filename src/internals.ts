@@ -1,12 +1,11 @@
-// Keep these here: they must be ignored by Istanbul, but ESBUILD swallows
-// commments (for a reason: https://github.com/evanw/esbuild/issues/578)
-
-import assert from 'assert'
-import type { Socket } from 'net'
-import { types } from 'util'
+import assert from 'node:assert'
+import { types } from 'node:util'
 
 import { FLAGS } from './constants'
 
+import type { Socket } from 'node:net'
+
+/* coverage ignore next */
 export const socketFinalizationRegistry = new FinalizationRegistry((socket: Socket): void => {
   if (! socket.destroyed) socket.destroy()
 })
@@ -24,11 +23,12 @@ export function typedArrayFlags(value: NodeJS.TypedArray): FLAGS {
     types.isBigInt64Array(value) ? FLAGS.BIGINT64ARRAY :
     types.isFloat32Array(value) ? FLAGS.FLOAT32ARRAY :
     types.isFloat64Array(value) ? FLAGS.FLOAT64ARRAY :
-    assert.fail('Unsupported kind of TypedArray')
+    /* coverage ignore next */ assert.fail('Unsupported kind of TypedArray')
   return flags
 }
 
+/* coverage ignore next */
 export function logPromiseError(promise: Promise<any>, message: string): Promise<void> {
-  // eslint-disable-next-line no-console
+  /* eslint-disable-next-line no-console */
   return promise.catch((error) => console.log(message, error)).then(() => void 0)
 }
