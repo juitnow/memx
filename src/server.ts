@@ -41,7 +41,7 @@ function injectStats(key: string, value: string, stats: any): Stats {
     stats[key] = !! Number(value)
   } else if (statsMicroseconds.includes(key)) {
     const splits = value.split('.')
-    stats[key] = BigInt(`${splits[0]}${splits[1].padEnd(6, '0')}`)
+    stats[key] = BigInt(`${splits[0]}${splits[1]!.padEnd(6, '0')}`)
   } else {
     stats[key] = value
   }

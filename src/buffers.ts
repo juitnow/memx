@@ -23,7 +23,7 @@ export function allocateBuffer(size: number): RecyclableBuffer {
     return buffer
   }
 
-  const buffer = offset >= 0 ? pool[offset--] : Buffer.allocUnsafeSlow(BUFFERS.BUFFER_SIZE)
+  const buffer = offset >= 0 ? pool[offset--]! : Buffer.allocUnsafeSlow(BUFFERS.BUFFER_SIZE)
   const recyclable = buffer.subarray(0, size) as RecyclableBuffer
   let recycled = false
   recyclable.recycle = (): void => queueMicrotask(() => {
