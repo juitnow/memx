@@ -10,7 +10,7 @@ function parseHosts(hosts?: string): ServerOptions[] {
   if (! hosts) return result
 
   for (const part of hosts.split(',')) {
-    const [ host, p ] = part.split(':')
+    const [ host, p ] = part.split(':') as [ string, string ]
     const port = parseInt(p) || undefined
     result.push({ host, port })
   }
@@ -65,10 +65,10 @@ export class ClusterAdapter implements Adapter {
 
     // Validate and shortcut in case of single-servers setup
     if (this.servers.length < 1) throw new Error('No hosts configured')
-    if (this.servers.length === 1) this.server = (): ServerAdapter => this.servers[0]
+    if (this.servers.length === 1) this.server = (): ServerAdapter => this.servers[0]!
 
     // Check TTLs are all the same
-    this.ttl = this.servers[0].ttl
+    this.ttl = this.servers[0]!.ttl
     this.servers.slice(1).forEach((server) => {
       assert.equal(server.ttl, this.ttl, `TTL Mismatch (${server.ttl} != ${this.ttl})`)
     })
@@ -83,7 +83,7 @@ export class ClusterAdapter implements Adapter {
     let hash = 0
     for (let i = 0; i < length; i ++) hash = hash * 31 + key.charCodeAt(i)
 
-    return this.servers[hash % this.servers.length]
+    return this.servers[hash % this.servers.length]!
   }
 
   get(key: string): Promise<AdapterResult | undefined> {

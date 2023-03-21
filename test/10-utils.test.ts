@@ -227,6 +227,8 @@ describe('Utilities', () => {
         return 'hello, world!'
       })
 
+      await new Promise((resolve) => setTimeout(resolve, 10)) // wait a tad
+
       record.push('create 2')
       const p2 = lock.execute(async () => {
         record.push('execute 2')
@@ -237,8 +239,10 @@ describe('Utilities', () => {
       expect(await p1).to.equal('hello, world!')
       await expect(p2).to.be.rejectedWith(Error, `Lock "${key}" timeout (owner=anonymous)`)
 
+      await new Promise((resolve) => setTimeout(resolve, 10)) // wait a tad
+
       expect((await client.getc(key))?.value).to.be.undefined
-      expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
+      expect(record).to.eql([ 'create 1', 'start 1', 'create 2', 'end 1' ])
     }, 3000)
 
     it('should timeout while acquiring a named lock', async () => {
@@ -260,6 +264,8 @@ describe('Utilities', () => {
         return 'hello, world!'
       }, { owner: 'foobar' })
 
+      await new Promise((resolve) => setTimeout(resolve, 10)) // wait a tad
+
       record.push('create 2')
       const p2 = lock.execute(async () => {
         record.push('execute 2')
@@ -270,8 +276,10 @@ describe('Utilities', () => {
       expect(await p1).to.equal('hello, world!')
       await expect(p2).to.be.rejectedWith(Error, `Lock "${key}" timeout (owner="foobar")`)
 
+      await new Promise((resolve) => setTimeout(resolve, 10)) // wait a tad
+
       expect((await client.getc(key))?.value).to.be.undefined
-      expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
+      expect(record).to.eql([ 'create 1', 'start 1', 'create 2', 'end 1' ])
     }, 3000)
   })
 })

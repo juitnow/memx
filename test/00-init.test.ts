@@ -13,6 +13,9 @@ let child: ChildProcess | undefined = undefined
 chai.use(chap).use(chae)
 
 beforeAll(() => {
+  // do not spawn local "memcached" on GitHub
+  if (process.env.GITHUB_ACTIONS) return
+
   return new Promise<void>((resolve, reject) => {
     const childProcess = spawn('memcached', { stdio: 'pipe' })
 
@@ -41,6 +44,9 @@ beforeAll(() => {
 })
 
 afterAll(() => {
+  // do not kill local "memcached" on GitHub
+  if (process.env.GITHUB_ACTIONS) return
+
   if (! child) throw new Error('Memcached server never started')
 
   log('\nStopping "memcached" process running with PID', child.pid)
