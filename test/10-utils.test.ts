@@ -240,7 +240,7 @@ describe('Utilities', () => {
       await expect(p2).to.be.rejectedWith(Error, `Lock "${key}" timeout (owner=anonymous)`)
 
       expect((await client.getc(key))?.value).to.be.undefined
-      expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
+      expect(record).to.eql([ 'create 1', 'start 1', 'create 2', 'end 1' ])
     }, 3000)
 
     it('should timeout while acquiring a named lock', async () => {
@@ -275,7 +275,7 @@ describe('Utilities', () => {
       await expect(p2).to.be.rejectedWith(Error, `Lock "${key}" timeout (owner="foobar")`)
 
       expect((await client.getc(key))?.value).to.be.undefined
-      expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
+      expect(record).to.eql([ 'create 1', 'start 1', 'create 2', 'end 1' ])
     }, 3000)
   })
 })
