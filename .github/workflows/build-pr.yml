@@ -11,7 +11,7 @@ jobs:
       memcached:
         image: memcached:latest
         ports:
-          - 11211/tcp
+          - 11211:11211/tcp
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
