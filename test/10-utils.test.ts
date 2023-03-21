@@ -227,6 +227,8 @@ describe('Utilities', () => {
         return 'hello, world!'
       })
 
+      await new Promise((resolve) => setTimeout(resolve, 50)) // wait a tad
+
       record.push('create 2')
       const p2 = lock.execute(async () => {
         record.push('execute 2')
@@ -259,6 +261,8 @@ describe('Utilities', () => {
 
         return 'hello, world!'
       }, { owner: 'foobar' })
+
+      await new Promise((resolve) => setTimeout(resolve, 50)) // wait a tad
 
       record.push('create 2')
       const p2 = lock.execute(async () => {
