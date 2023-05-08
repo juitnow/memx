@@ -2,6 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "types": [ "@plugjs/expect5/globals", "node" ],
+    "noUncheckedIndexedAccess": false,
     "rootDir": "..",
   },
   "include": [ "." ],

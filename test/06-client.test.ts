@@ -15,7 +15,7 @@ describe('Memcached Client', () => {
 
   let key: string
 
-  beforeEach(() => key = randomBytes(30).toString('base64'))
+  beforeEach(() => void (key = randomBytes(30).toString('base64')))
 
   describe('construction', () => {
     it('should construct without any arguments', () => {

@@ -13,7 +13,7 @@ describe('Utilities', () => {
 
   let key: string
 
-  beforeEach(() => key = randomBytes(30).toString('base64'))
+  beforeEach(() => void (key = randomBytes(30).toString('base64')))
 
   describe('factories', () => {
     it('should create an object and cache it', async () => {

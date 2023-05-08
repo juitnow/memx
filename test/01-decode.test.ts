@@ -11,7 +11,7 @@ describe('Decoding Packets', () => {
     processed.push(incoming)
   }
 
-  afterEach(() => processed.splice(0))
+  afterEach(() => void (processed.splice(0)))
 
   it('should decode packets from buffers of various length', () => {
     const packets = [
