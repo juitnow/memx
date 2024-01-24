@@ -1,14 +1,14 @@
 import assert from 'node:assert'
 import net from 'node:net'
 
-import { Encoder } from './encode'
-import { Decoder } from './decode'
 import { BUFFERS, OPCODE } from './constants'
+import { Decoder } from './decode'
+import { Encoder } from './encode'
 import { socketFinalizationRegistry } from './internals'
 
+import type { Socket } from 'node:net'
 import type { RawIncomingPacket } from './decode'
 import type { RawOutgoingPacket } from './encode'
-import type { Socket } from 'node:net'
 
 export type RawIncomingPackets = [ RawIncomingPacket, ...RawIncomingPacket[] ]
 
@@ -173,7 +173,7 @@ export class Connection {
       if (error) return deferred.reject(error)
     })
 
-    const timeout = setTimeout(() => deferred.reject(new Error('No response')), this.#timeout)
+    const timeout = setTimeout(() => deferred.reject(new Error('No response')), this.#timeout).unref()
 
     return deferred.promise.finally(() => {
       clearTimeout(timeout)

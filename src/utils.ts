@@ -135,7 +135,7 @@ export class PoorManLock {
     do {
       cas = await this.#client.add(this.#name, owner, { ttl: 2 })
       if (cas !== undefined) break
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise((resolve) => void setTimeout(resolve, 100).unref())
     } while (Date.now() < end)
 
     if (cas === undefined) {
@@ -154,7 +154,7 @@ export class PoorManLock {
         assert(replaced !== undefined, `Lock "${this.#client.prefix}${this.#name}" not replaced`)
         cas = replaced
       })(), `Error extending lock "${this.#client.prefix}${this.#name}"`)
-    }, 100)
+    }, 100).unref()
 
     try {
       return await executor()
