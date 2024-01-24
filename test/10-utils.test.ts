@@ -1,9 +1,9 @@
 import { randomBytes } from 'node:crypto'
 
+import { exec } from '@plugjs/build'
 import { expect } from 'chai'
 
-
-import { Bundle, MemxClient, Factory, PoorManLock } from '../src/index'
+import { Bundle, Factory, MemxClient, PoorManLock } from '../src/index'
 
 describe('Utilities', () => {
   const host = process.env.MEMCACHED_HOST || '127.0.0.1'
@@ -273,5 +273,33 @@ describe('Utilities', () => {
       expect((await client.getc(key))?.value).to.be.undefined
       expect(record).to.eql([ 'create 1', 'create 2', 'start 1', 'end 1' ])
     }, 3000)
+
+    it('should acquire when another process holding the lock crashes', async () => {
+      const lockname = `distributed-${process.pid}-${Math.floor(Math.random() * 100000)}`
+      const child = exec('tsrun', './test/locker.ts', lockname)
+
+      // this should give the child process enough time to start and lock
+      await new Promise((resolve) => void setTimeout(resolve, 500))
+
+      // the first attempt to locking should fail, the child should be locking!
+      await expect(new PoorManLock(client, lockname).execute(() => {
+        log.error('Initial lock attempt succesful')
+      }, { timeout: 100, owner: `test-parent-${process.pid}` }))
+          .to.be.rejectedWith(/timeout/)
+
+      // the second attempt should succeed, once the child dies...
+      const p1 = new PoorManLock(client, lockname).execute(() => {
+        log('Parent process executing 1')
+      }, { owner: `test-parent-${process.pid}@1` })
+      const p2 = new PoorManLock(client, lockname).execute(() => {
+        log('Parent process executing 2')
+      }, { owner: `test-parent-${process.pid}@2` })
+      const p3 = new PoorManLock(client, lockname).execute(() => {
+        log('Parent process executing 3')
+      }, { owner: `test-parent-${process.pid}@3` })
+
+      // reap up the child's leftovers...
+      await Promise.all([ p1, p2, p3, child ])
+    }, 10000)
   })
 })
