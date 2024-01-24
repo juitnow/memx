@@ -2,7 +2,7 @@ import { randomFillSync } from 'node:crypto'
 
 import { expect } from 'chai'
 
-import { decode, constants } from '../src/index'
+import { constants, decode } from '../src/index'
 
 
 describe('Decoding Packets', () => {

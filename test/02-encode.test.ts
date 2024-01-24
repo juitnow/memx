@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 
-import { encode, constants } from '../src/index'
+import { constants, encode } from '../src/index'
 
 describe('Encoding Packets', () => {
   it('should encode a packet with all information required', () => {

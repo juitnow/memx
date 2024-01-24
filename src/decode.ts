@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 
-import { DATA_TYPE, EMPTY_BUFFER, MAGIC, OFFSETS } from './constants'
 import { allocateBuffer } from './buffers'
+import { DATA_TYPE, EMPTY_BUFFER, MAGIC, OFFSETS } from './constants'
 
 import type { RecyclableBuffer } from './buffers'
 
