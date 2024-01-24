@@ -2,8 +2,8 @@ import assert from 'node:assert'
 
 import { ServerAdapter } from './server'
 
-import type { Adapter, Counter, AdapterResult, Stats } from './types'
 import type { ServerOptions } from './server'
+import type { Adapter, AdapterResult, Counter, Stats } from './types'
 
 function parseHosts(hosts?: string): ServerOptions[] {
   const result: { host: string, port?: number }[] = []

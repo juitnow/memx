@@ -204,7 +204,7 @@ export class FakeAdapter implements Adapter {
     if (! ttl) return this.#cache.clear()
 
     const wait = toExp(ttl) - Date.now()
-    setTimeout(() => this.#cache.clear(), wait)
+    setTimeout(() => this.#cache.clear(), wait).unref()
   }
 
   async noop(): Promise<void> {

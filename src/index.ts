@@ -1,20 +1,15 @@
 export type { RecyclableBuffer } from './buffers'
 
+import * as connection from './connection'
+import * as constants from './constants'
 import * as decode from './decode'
 import * as encode from './encode'
-import * as constants from './constants'
-import * as connection from './connection'
 
-export {
-  decode,
-  encode,
-  constants,
-  connection,
-}
+export { connection, constants, decode, encode }
 
-export * from './fake'
-export * from './types'
-export * from './cluster'
-export * from './server'
 export * from './client'
+export * from './cluster'
+export * from './fake'
+export * from './server'
+export * from './types'
 export * from './utils'

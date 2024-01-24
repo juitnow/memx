@@ -1,5 +1,5 @@
 import { allocateBuffer } from './buffers'
-import { DATA_TYPE, EMPTY_BUFFER, MAGIC, VBUCKET, OFFSETS } from './constants'
+import { DATA_TYPE, EMPTY_BUFFER, MAGIC, OFFSETS, VBUCKET } from './constants'
 
 import type { RecyclableBuffer } from './buffers'
 import type { OPCODE } from './constants'

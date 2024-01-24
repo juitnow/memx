@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto'
 
 import { expect } from 'chai'
 
-import { MemxClient, ClusterAdapter, ServerAdapter } from '../src/index'
+import { ClusterAdapter, MemxClient, ServerAdapter } from '../src/index'
 
 import type { Adapter } from '../src/index'
 
