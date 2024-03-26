@@ -446,6 +446,8 @@ export class ServerAdapter implements Adapter {
   }
 
   async quit(): Promise<void> {
+    if (! this.#connection.connected) return
+
     const [ response ] = await this.#connection.send({
       opcode: OPCODE.QUIT,
     })
@@ -453,6 +455,7 @@ export class ServerAdapter implements Adapter {
     try {
       switch (response.status) {
         case STATUS.OK:
+          await this.#connection.destroy()
           return
         default:
           fail(response)

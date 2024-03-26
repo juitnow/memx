@@ -16,7 +16,7 @@ async function test(): Promise<void> {
       console.log('Child process locking')
       await new Promise((resolve) => void setTimeout(resolve, 2000))
       console.log('Child process exiting')
-      process.exit(123)
+      process.exit(0)
     }, { owner: `test-child-${process.pid}` })
   } finally {
     console.log('Child process exit interrupted ???')
