@@ -173,7 +173,7 @@ export class Connection {
       if (error) return deferred.reject(error)
     })
 
-    const timeout = setTimeout(() => deferred.reject(new Error('No response')), this.#timeout).unref()
+    const timeout = setTimeout(() => deferred.reject(new Error('No response')), this.#timeout)
 
     return deferred.promise.finally(() => {
       clearTimeout(timeout)
