@@ -45,7 +45,9 @@ describe('Server Adapter', () => {
       expect(client.connected).to.be.true
 
       expect(await client.quit()).to.be.undefined
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      expect(client.connected).to.be.false
+
+      expect(await client.quit()).to.be.undefined
       expect(client.connected).to.be.false
 
       expect(await client.noop()).to.be.undefined
