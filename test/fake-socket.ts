@@ -13,8 +13,8 @@ export class FakeSocket extends EventEmitter {
     this.on('closed', () => this.destroyed = true)
     process.nextTick(() => {
       connect == 'timeout' ? this.emit('timeout') :
-      connect ? this.emit('connect') :
-      this.emit('error', new Error('Connection Error'))
+        connect ? this.emit('connect') :
+        this.emit('error', new Error('Connection Error'))
     })
   }
 

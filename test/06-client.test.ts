@@ -177,7 +177,7 @@ describe('Memcached Client', () => {
   })
 
   describe('buffers and typed arrays', () => {
-    const buffer = randomBytes(128)
+    const buffer = Buffer.from(randomBytes(128))
 
     it('Buffer', async () => {
       const set = await client.set(key, buffer)

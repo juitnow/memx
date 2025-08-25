@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process'
 import { createInterface } from 'node:readline'
 
 import { log } from '@plugjs/plug'
-import chai from 'chai'
+import * as chai from 'chai'
 import chap from 'chai-as-promised'
 import chae from 'chai-exclude'
 
