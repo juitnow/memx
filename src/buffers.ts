@@ -4,7 +4,7 @@ const pool: Buffer[] = new Array(BUFFERS.POOL_SIZE)
 let offset = -1
 
 /** A `RecyclableBuffer` is a `Buffer` that can be recycled by a pool. */
-export interface RecyclableBuffer extends Buffer {
+export interface RecyclableBuffer extends Buffer<ArrayBuffer> {
   /** Recycle this buffer. */
   recycle(): void
 }
