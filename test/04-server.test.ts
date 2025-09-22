@@ -1,5 +1,3 @@
-import { expect } from 'chai'
-
 import { ServerAdapter } from '../src/index'
 import { adapterTests } from './adapter'
 import { FakeSocket } from './fake-socket'
@@ -14,18 +12,22 @@ describe('Server Adapter', () => {
   describe('construction', () => {
     it('should construct an instance', () => {
       const s1 = new ServerAdapter({ host: 'foo' })
-      expect(s1).to.have.property('host', 'foo')
-      expect(s1).to.have.property('port', 11211)
-      expect(s1).to.have.property('timeout', 1000)
-      expect(s1).to.have.property('ttl', 0)
-      expect(s1).to.have.property('id', 'foo:11211')
+      expect(s1).toInclude({
+        host: 'foo',
+        port: 11211,
+        timeout: 1000,
+        ttl: 0,
+        id: 'foo:11211',
+      })
 
       const s2 = new ServerAdapter({ host: 'bar', port: 12345, timeout: 99, ttl: 100 })
-      expect(s2).to.have.property('host', 'bar')
-      expect(s2).to.have.property('port', 12345)
-      expect(s2).to.have.property('timeout', 99)
-      expect(s2).to.have.property('ttl', 100)
-      expect(s2).to.have.property('id', 'bar:12345')
+      expect(s2).toInclude({
+        host: 'bar',
+        port: 12345,
+        timeout: 99,
+        ttl: 100,
+        id: 'bar:12345',
+      })
     })
   })
 
@@ -38,25 +40,25 @@ describe('Server Adapter', () => {
 
   describe('noop/quit/version/stats', () => {
     it('should issue a noop', async () => {
-      expect(await client.noop()).to.be.undefined
+      expect(await client.noop()).toBeUndefined()
     })
 
     it('should quit and reconnect', async () => {
-      expect(client.connected).to.be.true
+      expect(client.connected).toBeTrue()
 
-      expect(await client.quit()).to.be.undefined
-      expect(client.connected).to.be.false
+      expect(await client.quit()).toBeUndefined()
+      expect(client.connected).toBeFalse()
 
-      expect(await client.quit()).to.be.undefined
-      expect(client.connected).to.be.false
+      expect(await client.quit()).toBeUndefined()
+      expect(client.connected).toBeFalse()
 
-      expect(await client.noop()).to.be.undefined
-      expect(client.connected).to.be.true
+      expect(await client.noop()).toBeUndefined()
+      expect(client.connected).toBeTrue()
     })
 
     it('should get the version', async () => {
       const version = await client.version()
-      expect(version[client.id]).to.match(/^\d+\.\d+\.\d+$/)
+      expect(version[client.id]).toMatch(/^\d+\.\d+\.\d+$/)
     })
 
     it('should get the stats', async () => {
@@ -64,12 +66,12 @@ describe('Server Adapter', () => {
       const versions = await client.version()
       const version = versions[client.id]
 
-      expect(stats[client.id]).to.be.an('object')
-      expect(stats[client.id].version).to.be.a('string').equal(version) // strings
-      expect(stats[client.id].pid).to.be.a('number') // numbers
-      expect(stats[client.id].cmd_get).to.be.a('bigint') // bigint
-      expect(stats[client.id].accepting_conns).to.be.a('boolean') // boolean
-      expect(stats[client.id].rusage_user).to.be.a('bigint') // microseconds
+      expect(stats[client.id]).toBeA('object')
+      expect(stats[client.id].version).toBeA('string').toEqual(version) // strings
+      expect(stats[client.id].pid).toBeA('number') // numbers
+      expect(stats[client.id].cmd_get).toBeA('bigint') // bigint
+      expect(stats[client.id].accepting_conns).toBeA('boolean') // boolean
+      expect(stats[client.id].rusage_user).toBeA('bigint') // microseconds
     })
   })
 
@@ -99,67 +101,67 @@ describe('Server Adapter', () => {
     //   const key = randomBytes(30).toString('base64')
     //   const value = randomBytes(64)
 
-    //   expect(await client.get(key)).to.be.undefined
+    //   expect(await client.get(key)).toBeUndefined()
 
     //   const cas = await client.set(key, value, { ttl: 3600 })
-    //   expect(cas).to.be.a('bigint')
+    //   expect(cas).toBeA('bigint')
 
-    //   expect(await client.gat(key)).excluding('recycle').to.eql({
+    //   expect(await client.gat(key)).excluding('recycle').toEqual({
     //     value,
     //     flags: 0,
     //     cas,
     //   })
 
     //   await new Promise((resolve) => setTimeout(resolve, 2000))
-    //   expect(await client.get(key)).to.be.undefined
+    //   expect(await client.get(key)).toBeUndefined()
     // })
 
     it('should fail on get', async () => {
-      await expect(client.get('foo')).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
+      await expect(client.get('foo')).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
     })
 
     it('should fail on touch', async () => {
-      await expect(client.touch('foo')).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
+      await expect(client.touch('foo')).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
     })
 
     it('should fail on set/add/replace', async () => {
-      await expect(client.set('foo', Buffer.alloc(10))).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
-      await expect(client.add('foo', Buffer.alloc(10))).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
-      await expect(client.replace('foo', Buffer.alloc(10))).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
+      await expect(client.set('foo', Buffer.alloc(10))).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
+      await expect(client.add('foo', Buffer.alloc(10))).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
+      await expect(client.replace('foo', Buffer.alloc(10))).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
     })
 
     it('should fail on append/prepend', async () => {
-      await expect(client.append('foo', Buffer.alloc(10))).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
-      await expect(client.prepend('foo', Buffer.alloc(10))).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
+      await expect(client.append('foo', Buffer.alloc(10))).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
+      await expect(client.prepend('foo', Buffer.alloc(10))).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
     })
 
     it('should fail on increment/decrement', async () => {
-      await expect(client.increment('foo', 1)).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
-      await expect(client.decrement('foo', 1)).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
+      await expect(client.increment('foo', 1)).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
+      await expect(client.decrement('foo', 1)).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
     })
 
     it('should fail on delete', async () => {
-      await expect(client.delete('foo')).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123, key=foo)')
+      await expect(client.delete('foo')).toBeRejectedWithError('Unknown Error (status=0x0123, key=foo)')
     })
 
     it('should fail on flush', async () => {
-      await expect(client.flush()).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123)')
+      await expect(client.flush()).toBeRejectedWithError('Unknown Error (status=0x0123)')
     })
 
     it('should fail on noop', async () => {
-      await expect(client.noop()).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123)')
+      await expect(client.noop()).toBeRejectedWithError('Unknown Error (status=0x0123)')
     })
 
     it('should fail on quit', async () => {
-      await expect(client.quit()).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123)')
+      await expect(client.quit()).toBeRejectedWithError('Unknown Error (status=0x0123)')
     })
 
     it('should fail on version', async () => {
-      await expect(client.version()).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123)')
+      await expect(client.version()).toBeRejectedWithError('Unknown Error (status=0x0123)')
     })
 
     it('should fail on stats', async () => {
-      await expect(client.stats()).to.be.rejectedWith(Error, 'Unknown Error (status=0x0123)')
+      await expect(client.stats()).toBeRejectedWithError('Unknown Error (status=0x0123)')
     })
   })
 })

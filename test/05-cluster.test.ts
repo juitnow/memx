@@ -1,14 +1,12 @@
 import { AssertionError } from 'node:assert'
 import { randomBytes } from 'node:crypto'
 
-import { expect } from 'chai'
-
 import { ClusterAdapter, ServerAdapter } from '../src/index'
 
 import type { ServerOptions } from '../src/index'
 
 function check(cluster: ClusterAdapter, servers: Required<ServerOptions>[]): void {
-  expect(cluster.servers).to.be.an('array')
+  expect(cluster.servers).toBeA('array')
 
   const options: ServerOptions[] = cluster.servers.map((server) => ({
     host: server.host,
@@ -17,7 +15,7 @@ function check(cluster: ClusterAdapter, servers: Required<ServerOptions>[]): voi
     ttl: server.ttl,
   }))
 
-  expect(options).to.eql(servers)
+  expect(options).toEqual(servers)
 }
 
 describe('Cluster Adapter', () => {
@@ -27,30 +25,29 @@ describe('Cluster Adapter', () => {
       const server2 = new ServerAdapter({ host: 'host2' })
       const cluster = new ClusterAdapter([ server1, server2 ])
 
-      expect(cluster.servers).to.eql([ server1, server2 ])
-      expect(cluster.servers[0]).to.equal(server1)
-      expect(cluster.servers[1]).to.equal(server2)
+      expect(cluster.servers).toEqual([ server1, server2 ])
+      expect(cluster.servers[0]).toStrictlyEqual(server1)
+      expect(cluster.servers[1]).toStrictlyEqual(server2)
 
       // "foo" and "bar" hash to two different servers!
-      expect(cluster.server('foo')).to.equal(server1)
-      expect(cluster.server('bar')).to.equal(server2)
-      expect(cluster.server).to.equal(ClusterAdapter.prototype.server)
+      expect(cluster.server('foo')).toStrictlyEqual(server1)
+      expect(cluster.server('bar')).toStrictlyEqual(server2)
+      expect(cluster.server).toStrictlyEqual(ClusterAdapter.prototype.server)
     })
 
     it('should construct with a single server', () => {
       const server = new ServerAdapter({ host: 'host1' })
       const cluster = new ClusterAdapter([ server ])
 
-      expect(cluster.servers).to.eql([ server ])
-      expect(cluster.servers[0]).to.equal(server)
+      expect(cluster.servers).toEqual([ server ])
+      expect(cluster.servers[0]).toStrictlyEqual(server)
 
-      expect(cluster.server('foo')).to.equal(server)
-      expect(cluster.server('bar')).to.equal(server)
-      expect(cluster.server).to.not.equal(ClusterAdapter.prototype.server)
+      expect(cluster.server('foo')).toStrictlyEqual(server)
+      expect(cluster.server('bar')).toStrictlyEqual(server)
     })
 
     it('should not construct with out servers', () => {
-      expect(() => new ClusterAdapter([])).to.throw(Error, 'No hosts configured')
+      expect(() => new ClusterAdapter([])).toThrowError('No hosts configured')
     })
 
     it('should construct with environment variables', () => {
@@ -89,7 +86,7 @@ describe('Cluster Adapter', () => {
         delete process.env.MEMCACHED_TTL
         delete process.env.MEMCACHED_TIMEOUT
 
-        expect(() => new ClusterAdapter()).to.throw(Error, 'No hosts configured')
+        expect(() => new ClusterAdapter()).toThrowError('No hosts configured')
       } finally {
         process.env.MEMCACHED_HOSTS = _hosts
         process.env.MEMCACHED_TTL = _ttl
@@ -151,7 +148,7 @@ describe('Cluster Adapter', () => {
       expect(() => new ClusterAdapter({ hosts: [
         { host: 'host1' },
         { host: 'host2', ttl: 123 },
-      ], ttl: 321 })).to.throw(AssertionError, 'TTL Mismatch (123 != 321)')
+      ], ttl: 321 })).toThrowError(AssertionError, 'TTL Mismatch (123 != 321)')
     })
   })
 
@@ -164,8 +161,8 @@ describe('Cluster Adapter', () => {
         { get: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.get('foo')).to.eql([ 1, 'foo' ])
-      expect(await cluster.get('bar')).to.eql([ 2, 'bar' ])
+      expect(await cluster.get('foo')).toEqual([ 1, 'foo' ])
+      expect(await cluster.get('bar')).toEqual([ 2, 'bar' ])
     })
 
     it('gat', async () => {
@@ -174,8 +171,8 @@ describe('Cluster Adapter', () => {
         { gat: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.gat('foo', 100)).to.eql([ 1, 'foo', 100 ])
-      expect(await cluster.gat('bar', 100)).to.eql([ 2, 'bar', 100 ])
+      expect(await cluster.gat('foo', 100)).toEqual([ 1, 'foo', 100 ])
+      expect(await cluster.gat('bar', 100)).toEqual([ 2, 'bar', 100 ])
     })
 
     it('touch', async () => {
@@ -184,8 +181,8 @@ describe('Cluster Adapter', () => {
         { touch: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.touch('foo', 100)).to.eql([ 1, 'foo', 100 ])
-      expect(await cluster.touch('bar', 100)).to.eql([ 2, 'bar', 100 ])
+      expect(await cluster.touch('foo', 100)).toEqual([ 1, 'foo', 100 ])
+      expect(await cluster.touch('bar', 100)).toEqual([ 2, 'bar', 100 ])
     })
 
     it('set', async () => {
@@ -194,8 +191,8 @@ describe('Cluster Adapter', () => {
         { set: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.set('foo', val, { ttl: 100 })).to.eql([ 1, 'foo', val, { ttl: 100 } ])
-      expect(await cluster.set('bar', val, { ttl: 100 })).to.eql([ 2, 'bar', val, { ttl: 100 } ])
+      expect(await cluster.set('foo', val, { ttl: 100 })).toEqual([ 1, 'foo', val, { ttl: 100 } ])
+      expect(await cluster.set('bar', val, { ttl: 100 })).toEqual([ 2, 'bar', val, { ttl: 100 } ])
     })
 
     it('add', async () => {
@@ -204,8 +201,8 @@ describe('Cluster Adapter', () => {
         { add: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.add('foo', val, { ttl: 100 })).to.eql([ 1, 'foo', val, { ttl: 100 } ])
-      expect(await cluster.add('bar', val, { ttl: 100 })).to.eql([ 2, 'bar', val, { ttl: 100 } ])
+      expect(await cluster.add('foo', val, { ttl: 100 })).toEqual([ 1, 'foo', val, { ttl: 100 } ])
+      expect(await cluster.add('bar', val, { ttl: 100 })).toEqual([ 2, 'bar', val, { ttl: 100 } ])
     })
 
     it('replace', async () => {
@@ -214,8 +211,8 @@ describe('Cluster Adapter', () => {
         { replace: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.replace('foo', val, { ttl: 100 })).to.eql([ 1, 'foo', val, { ttl: 100 } ])
-      expect(await cluster.replace('bar', val, { ttl: 100 })).to.eql([ 2, 'bar', val, { ttl: 100 } ])
+      expect(await cluster.replace('foo', val, { ttl: 100 })).toEqual([ 1, 'foo', val, { ttl: 100 } ])
+      expect(await cluster.replace('bar', val, { ttl: 100 })).toEqual([ 2, 'bar', val, { ttl: 100 } ])
     })
 
     it('append', async () => {
@@ -224,8 +221,8 @@ describe('Cluster Adapter', () => {
         { append: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.append('foo', val, { cas: 100n })).to.eql([ 1, 'foo', val, { cas: 100n } ])
-      expect(await cluster.append('bar', val, { cas: 100n })).to.eql([ 2, 'bar', val, { cas: 100n } ])
+      expect(await cluster.append('foo', val, { cas: 100n })).toEqual([ 1, 'foo', val, { cas: 100n } ])
+      expect(await cluster.append('bar', val, { cas: 100n })).toEqual([ 2, 'bar', val, { cas: 100n } ])
     })
 
     it('prepend', async () => {
@@ -234,8 +231,8 @@ describe('Cluster Adapter', () => {
         { prepend: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.prepend('foo', val, { cas: 100n })).to.eql([ 1, 'foo', val, { cas: 100n } ])
-      expect(await cluster.prepend('bar', val, { cas: 100n })).to.eql([ 2, 'bar', val, { cas: 100n } ])
+      expect(await cluster.prepend('foo', val, { cas: 100n })).toEqual([ 1, 'foo', val, { cas: 100n } ])
+      expect(await cluster.prepend('bar', val, { cas: 100n })).toEqual([ 2, 'bar', val, { cas: 100n } ])
     })
 
     it('increment', async () => {
@@ -244,8 +241,8 @@ describe('Cluster Adapter', () => {
         { increment: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.increment('foo', 123n, { cas: 100n })).to.eql([ 1, 'foo', 123n, { cas: 100n } ])
-      expect(await cluster.increment('bar', 123n, { cas: 100n })).to.eql([ 2, 'bar', 123n, { cas: 100n } ])
+      expect(await cluster.increment('foo', 123n, { cas: 100n })).toEqual([ 1, 'foo', 123n, { cas: 100n } ])
+      expect(await cluster.increment('bar', 123n, { cas: 100n })).toEqual([ 2, 'bar', 123n, { cas: 100n } ])
     })
 
     it('decrement', async () => {
@@ -254,8 +251,8 @@ describe('Cluster Adapter', () => {
         { decrement: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.decrement('foo', 123n, { cas: 100n })).to.eql([ 1, 'foo', 123n, { cas: 100n } ])
-      expect(await cluster.decrement('bar', 123n, { cas: 100n })).to.eql([ 2, 'bar', 123n, { cas: 100n } ])
+      expect(await cluster.decrement('foo', 123n, { cas: 100n })).toEqual([ 1, 'foo', 123n, { cas: 100n } ])
+      expect(await cluster.decrement('bar', 123n, { cas: 100n })).toEqual([ 2, 'bar', 123n, { cas: 100n } ])
     })
 
     it('delete', async () => {
@@ -264,8 +261,8 @@ describe('Cluster Adapter', () => {
         { delete: async (...args: any) => [ 2, ...args ] } as any as ServerAdapter,
       ])
 
-      expect(await cluster.delete('foo', { cas: 100n })).to.eql([ 1, 'foo', { cas: 100n } ])
-      expect(await cluster.delete('bar', { cas: 100n })).to.eql([ 2, 'bar', { cas: 100n } ])
+      expect(await cluster.delete('foo', { cas: 100n })).toEqual([ 1, 'foo', { cas: 100n } ])
+      expect(await cluster.delete('bar', { cas: 100n })).toEqual([ 2, 'bar', { cas: 100n } ])
     })
 
     it('flush', async () => {
@@ -277,7 +274,7 @@ describe('Cluster Adapter', () => {
       ])
 
       await(cluster.flush(12345))
-      expect(calls).to.eql({ 1: [ 12345 ], 2: [ 12345 ] })
+      expect(calls).toEqual({ 1: [ 12345 ], 2: [ 12345 ] })
     })
 
     it('noop', async () => {
@@ -289,7 +286,7 @@ describe('Cluster Adapter', () => {
       ])
 
       await(cluster.noop())
-      expect(calls).to.eql({ 1: [], 2: [] })
+      expect(calls).toEqual({ 1: [], 2: [] })
     })
 
     it('quit', async () => {
@@ -301,7 +298,7 @@ describe('Cluster Adapter', () => {
       ])
 
       await(cluster.quit())
-      expect(calls).to.eql({ 1: [], 2: [] })
+      expect(calls).toEqual({ 1: [], 2: [] })
     })
 
     it('version', async () => {
@@ -310,7 +307,7 @@ describe('Cluster Adapter', () => {
         { version: async (...args: any) => ({ 2: [ 'two', ...args ] }) } as any as ServerAdapter,
       ])
 
-      expect(await(cluster.version())).to.eql({ 1: [ 'one' ], 2: [ 'two' ] })
+      expect(await(cluster.version())).toEqual({ 1: [ 'one' ], 2: [ 'two' ] })
     })
 
     it('stats', async () => {
@@ -319,7 +316,7 @@ describe('Cluster Adapter', () => {
         { stats: async (...args: any) => ({ 2: [ 'two', ...args ] }) } as any as ServerAdapter,
       ])
 
-      expect(await(cluster.stats())).to.eql({ 1: [ 'one' ], 2: [ 'two' ] })
+      expect(await(cluster.stats())).toEqual({ 1: [ 'one' ], 2: [ 'two' ] })
     })
   })
 })

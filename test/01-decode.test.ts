@@ -1,9 +1,6 @@
 import { randomFillSync } from 'node:crypto'
 
-import { expect } from 'chai'
-
 import { constants, decode } from '../src/index'
-
 
 describe('Decoding Packets', () => {
   const processed: decode.RawIncomingPacket[] = []
@@ -68,12 +65,12 @@ describe('Decoding Packets', () => {
         incoming.append(buffer, s, e)
       }
 
-      expect(processed.length).to.equal(3, `Wrong packets received for i=${i}`)
+      expect(processed.length, `Wrong packets received for i=${i}`).toStrictlyEqual(3)
 
       for (let n = 0; n < 3; n ++) {
-        expect(processed[n].key.toString('hex')).to.equal(keys[n], `Wrong key for p=${n} i=${i}`)
-        expect(processed[n].value.toString('hex')).to.equal(values[n], `Wrong value for p=${n} i=${i}`)
-        expect(processed[n].extras.toString('hex')).to.equal(extras[n], `Wrong extras for p=${n} i=${i}`)
+        expect(processed[n].key.toString('hex'), `Wrong key for p=${n} i=${i}`).toStrictlyEqual(keys[n])
+        expect(processed[n].value.toString('hex'), `Wrong value for p=${n} i=${i}`).toStrictlyEqual(values[n])
+        expect(processed[n].extras.toString('hex'), `Wrong extras for p=${n} i=${i}`).toStrictlyEqual(extras[n])
       }
 
       processed.splice(0)
@@ -95,7 +92,7 @@ describe('Decoding Packets', () => {
 
     new decode.Decoder(handler).append(buffer, 0, buffer.length)
 
-    expect(processed).to.eql([ {
+    expect(processed).toEqual([ {
       opcode: constants.OPCODE.QUIT,
       status: constants.STATUS.TOO_LARGE,
       sequence: 0x01020304,
@@ -106,7 +103,7 @@ describe('Decoding Packets', () => {
       recycle: processed[0].recycle,
     } ])
 
-    expect(processed[0].recycle()).to.be.undefined
+    expect(processed[0].recycle()).toBeUndefined()
   })
 
   it('should decode a packet with no body', () => {
@@ -121,7 +118,7 @@ describe('Decoding Packets', () => {
 
     new decode.Decoder(handler).append(buffer, 0, buffer.length)
 
-    expect(processed).to.eql([ {
+    expect(processed).toEqual([ {
       opcode: constants.OPCODE.QUIT,
       status: constants.STATUS.TOO_LARGE,
       sequence: 0x01020304,
@@ -132,6 +129,6 @@ describe('Decoding Packets', () => {
       recycle: processed[0].recycle,
     } ])
 
-    expect(processed[0].recycle()).to.be.undefined
+    expect(processed[0].recycle()).toBeUndefined()
   })
 })

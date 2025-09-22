@@ -1,7 +1,5 @@
 import { AssertionError } from 'node:assert'
 
-import { expect } from 'chai'
-
 import { connection, constants } from '../src/index'
 import { FakeSocket } from './fake-socket'
 
@@ -19,29 +17,33 @@ describe('Connection', () => {
 
   it('should construct an instance', () => {
     const c1 = new Connection({ host: 'foo' })
-    expect(c1).to.have.property('host', 'foo')
-    expect(c1).to.have.property('port', 11211)
-    expect(c1).to.have.property('timeout', 1000)
+    expect(c1).toInclude({
+      host: 'foo',
+      port: 11211,
+      timeout: 1000,
+    })
 
     const c2 = new Connection({ host: 'bar', port: 12345, timeout: 99 })
-    expect(c2).to.have.property('host', 'bar')
-    expect(c2).to.have.property('port', 12345)
-    expect(c2).to.have.property('timeout', 99)
+    expect(c2).toInclude({
+      host: 'bar',
+      port: 12345,
+      timeout: 99,
+    })
 
     expect(() => new Connection())
-        .to.throw(AssertionError, 'No options specified')
+        .toThrowError(AssertionError, 'No options specified')
 
     expect(() => new Connection({ host: '', port: 54321 }))
-        .to.throw(AssertionError, 'No host name specified')
+        .toThrowError(AssertionError, 'No host name specified')
 
     expect(() => new Connection({ host: 'foo', port: 0 }))
-        .to.throw(AssertionError, 'Invalid port 0')
+        .toThrowError(AssertionError, 'Invalid port 0')
 
     expect(() => new Connection({ host: 'foo', port: 65536 }))
-        .to.throw(AssertionError, 'Invalid port 65536')
+        .toThrowError(AssertionError, 'Invalid port 65536')
 
     expect(() => new Connection({ host: 'foo', port: 12.34 }))
-        .to.throw(AssertionError, 'Invalid port 12.34')
+        .toThrowError(AssertionError, 'Invalid port 12.34')
   })
 
   it('should create and destroy a connection', async () => {
@@ -49,20 +51,20 @@ describe('Connection', () => {
       throw new Error('SHOULD NOT CONNECT')
     } })
     const destroyed = await connection.destroy()
-    expect(destroyed).to.be.false
+    expect(destroyed).toBeFalse()
   })
 
   it('should create and connect', async () => {
     const connection = new Connection({ host, port, timeout: 1234, factory: (options: any): any => {
-      expect(options.host).to.equal(host)
-      expect(options.port).to.equal(port)
-      expect(options.timeout).to.equal(1234)
-      expect(options.onread.buffer).to.be.instanceof(Buffer).with.property('length', 8192)
-      expect(options.onread.callback).to.be.a('function')
+      expect(options.host).toStrictlyEqual(host)
+      expect(options.port).toStrictlyEqual(port)
+      expect(options.timeout).toStrictlyEqual(1234)
+      expect(options.onread.buffer).toBeInstanceOf(Buffer).toHaveLength(8192)
+      expect(options.onread.callback).toBeA('function')
 
       return new class extends FakeSocket {
         $write(string: string, callback: (error?: Error) => void): void {
-          expect(string).to.equal('800700000000000000000000000000010000000000000000')
+          expect(string).toStrictlyEqual('800700000000000000000000000000010000000000000000')
           this.$respond('810700000000000000000000000000010000000000000000')
           callback()
         }
@@ -70,7 +72,7 @@ describe('Connection', () => {
     } })
 
     const reply = await connection.send({ opcode: constants.OPCODE.QUIT })
-    expect(reply).to.eql([ {
+    expect(reply).toEqual([ {
       opcode: constants.OPCODE.QUIT,
       status: constants.STATUS.OK,
       sequence: 1,
@@ -81,7 +83,7 @@ describe('Connection', () => {
       recycle: reply[0].recycle,
     } ])
 
-    expect(await connection.destroy()).to.be.false
+    expect(await connection.destroy()).toBeFalse()
   })
 
   it('should handle errors connecting', async () => {
@@ -90,7 +92,7 @@ describe('Connection', () => {
     } })
 
     await expect(connection.send({ opcode: constants.OPCODE.QUIT }))
-        .to.be.rejectedWith(Error, 'Connection Error')
+        .toBeRejectedWithError('Connection Error')
   })
 
   it('should handle timeouts connecting', async () => {
@@ -99,7 +101,7 @@ describe('Connection', () => {
     } })
 
     await expect(connection.send({ opcode: constants.OPCODE.QUIT }))
-        .to.be.rejectedWith(Error, 'Timeout')
+        .toBeRejectedWithError('Timeout')
   })
 
   it('should handle errors writing', async () => {
@@ -108,7 +110,7 @@ describe('Connection', () => {
     } })
 
     await expect(connection.send({ opcode: constants.OPCODE.QUIT }))
-        .to.be.rejectedWith(Error, 'Write Error')
+        .toBeRejectedWithError('Write Error')
   })
 
   it('should handle timeouts writing', async () => {
@@ -121,14 +123,14 @@ describe('Connection', () => {
     } })
 
     await expect(connection.send({ opcode: constants.OPCODE.QUIT }))
-        .to.be.rejectedWith(Error, 'Timeout')
+        .toBeRejectedWithError('Timeout')
   })
 
   it('should fail when response has a different opcode', async () => {
     const connection = new Connection({ host, port, factory: (options: any): any => {
       return new class extends FakeSocket {
         $write(string: string, callback: (error?: Error) => void): void {
-          expect(string).to.equal('800700000000000000000000000000010000000000000000')
+          expect(string).toStrictlyEqual('800700000000000000000000000000010000000000000000')
           this.$respond('810000000000000000000000000000010000000000000000')
           callback()
         }
@@ -136,14 +138,14 @@ describe('Connection', () => {
     } })
 
     await expect(connection.send({ opcode: constants.OPCODE.QUIT }))
-        .to.be.rejectedWith(Error, 'Opcode mismatch (sent=0x07, received=0x00)')
+        .toBeRejectedWithError('Opcode mismatch (sent=0x07, received=0x00)')
   })
 
   it('should handle multiple packets for "stat"', async () => {
     const connection = new Connection({ host, port, factory: (options: any): any => {
       return new class extends FakeSocket {
         $write(string: string, callback: (error?: Error) => void): void {
-          expect(string).to.equal('801000000000000000000000000000010000000000000000')
+          expect(string).toStrictlyEqual('801000000000000000000000000000010000000000000000')
           this.$respond('811000030000000000000006000000010000000000000000666f6f626172')
           this.$respond('811000000000000000000000000000010000000000000000')
           callback()
@@ -152,7 +154,7 @@ describe('Connection', () => {
     } })
 
     const result = await connection.send({ opcode: constants.OPCODE.STAT })
-    expect(result).to.eql([ {
+    expect(result).toEqual([ {
       opcode: 16,
       status: 0,
       sequence: 1,
@@ -177,7 +179,7 @@ describe('Connection', () => {
     const connection = new Connection({ host, port, timeout: 100, factory: (options: any): any => {
       return new class extends FakeSocket {
         $write(string: string, callback: (error?: Error) => void): void {
-          expect(string).to.equal('800700000000000000000000000000010000000000000000')
+          expect(string).toStrictlyEqual('800700000000000000000000000000010000000000000000')
           this.$respond('810700000000000000000000000000020000000000000000')
           callback()
         }
@@ -187,20 +189,20 @@ describe('Connection', () => {
     const now = Date.now()
 
     await expect(connection.send({ opcode: constants.OPCODE.QUIT }))
-        .to.be.rejectedWith(Error, 'No response')
+        .toBeRejectedWithError('No response')
 
-    expect(Date.now() - now).to.be.closeTo(100, 10)
+    expect(Date.now() - now).toBeCloseTo(100, 10)
   })
 
   it('should work with a real memcached server', async () => {
     const connection = new Connection({ host, port })
-    expect(connection.connected).to.be.false
+    expect(connection.connected).toBeFalse()
 
     const promise = connection.send({ opcode: constants.OPCODE.QUIT })
-    expect(connection.connected).to.be.true
+    expect(connection.connected).toBeTrue()
 
     const result = await promise
-    expect(result).to.eql([ {
+    expect(result).toEqual([ {
       opcode: constants.OPCODE.QUIT,
       status: constants.STATUS.OK,
       sequence: 1,
@@ -213,6 +215,6 @@ describe('Connection', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    expect(connection.connected).to.be.false
+    expect(connection.connected).toBeFalse()
   })
 })

@@ -1,8 +1,6 @@
 import { AssertionError } from 'node:assert'
 import { randomBytes } from 'node:crypto'
 
-import { expect } from 'chai'
-
 import { ClusterAdapter, MemxClient, ServerAdapter } from '../src/index'
 
 import type { Adapter } from '../src/index'
@@ -28,11 +26,11 @@ describe('Memcached Client', () => {
         delete process.env.MEMCACHED_TIMEOUT
 
         const client = new MemxClient()
-        expect(client.adapter).to.be.instanceof(ClusterAdapter)
+        expect(client.adapter).toBeInstanceOf(ClusterAdapter)
 
         const adapter = client.adapter as ClusterAdapter
-        expect(adapter.servers).to.be.an('array')
-        expect(adapter.servers[0].host).to.equal('host1')
+        expect(adapter.servers).toBeA('array')
+        expect(adapter.servers[0].host).toStrictlyEqual('host1')
       } finally {
         process.env.MEMCACHED_HOSTS = _hosts
         process.env.MEMCACHED_TTL = _ttl
@@ -42,22 +40,22 @@ describe('Memcached Client', () => {
 
     it('should construct with some options', () => {
       const client = new MemxClient({ hosts: 'host1' })
-      expect(client.adapter).to.be.instanceof(ClusterAdapter)
+      expect(client.adapter).toBeInstanceOf(ClusterAdapter)
 
       const adapter = client.adapter as ClusterAdapter
-      expect(adapter.servers).to.be.an('array')
-      expect(adapter.servers[0].host).to.equal('host1')
+      expect(adapter.servers).toBeA('array')
+      expect(adapter.servers[0].host).toStrictlyEqual('host1')
     })
 
     it('should construct with an adapter', () => {
       const server = new ServerAdapter({ host: 'host1' })
       const client = new MemxClient(server)
-      expect(client.adapter).to.equal(server)
+      expect(client.adapter).toStrictlyEqual(server)
     })
 
     it('should not construct with something else', () => {
       expect(() => new MemxClient({} as any))
-          .to.throw(AssertionError, 'Invalid client constructor arguments')
+          .toThrowError(AssertionError, 'Invalid client constructor arguments')
     })
   })
 
@@ -76,21 +74,21 @@ describe('Memcached Client', () => {
     for (const [ test, value ] of Object.entries(tests)) {
       it(test, async () => {
         const cas = await client.set(key, value)
-        expect(await client.getc(key)).eql({ value, cas })
-        expect(await client.gatc(key, 1)).eql({ value, cas })
-        expect(await client.get(key)).eql(value)
-        expect(await client.gat(key, 1)).eql(value)
+        expect(await client.getc(key)).toEqual({ value, cas })
+        expect(await client.gatc(key, 1)).toEqual({ value, cas })
+        expect(await client.get(key)).toEqual(value)
+        expect(await client.gat(key, 1)).toEqual(value)
       })
     }
 
     it('undefined (fail)', async () => {
       await expect(client.set(key, <any> undefined))
-          .to.be.rejectedWith(AssertionError, 'Unable to store value of type "undefined"')
+          .toBeRejectedWithError(AssertionError, 'Unable to store value of type "undefined"')
     })
 
     it('symbol (fail)', async () => {
       await expect(client.set(key, <any> Symbol()))
-          .to.be.rejectedWith(AssertionError, 'Unable to store value of type "symbol"')
+          .toBeRejectedWithError(AssertionError, 'Unable to store value of type "symbol"')
     })
   })
 
@@ -101,7 +99,7 @@ describe('Memcached Client', () => {
       await client.set(key, new Date(date))
 
       const result = await client.getc<Date>(key)
-      expect(result?.value).to.eql(date)
+      expect(result?.value).toEqual(date)
     })
 
     it('date (json)', async () => {
@@ -110,7 +108,7 @@ describe('Memcached Client', () => {
       await client.set(key, { date, test: 'foobar' })
 
       const result = await client.getc(key)
-      expect(result?.value).to.eql({ date, test: 'foobar' })
+      expect(result?.value).toEqual({ date, test: 'foobar' })
     })
 
     it('set', async () => {
@@ -119,7 +117,7 @@ describe('Memcached Client', () => {
       await client.set(key, set)
 
       const result = await client.getc(key)
-      expect(result?.value).to.eql(set)
+      expect(result?.value).toEqual(set)
     })
 
     it('set (json)', async () => {
@@ -128,7 +126,7 @@ describe('Memcached Client', () => {
       await client.set(key, { set, test: 'foobar' })
 
       const result = await client.getc(key)
-      expect(result?.value).to.eql({ set, test: 'foobar' })
+      expect(result?.value).toEqual({ set, test: 'foobar' })
     })
 
     it('map', async () => {
@@ -137,7 +135,7 @@ describe('Memcached Client', () => {
       await client.set(key, map)
 
       const result = await client.getc(key)
-      expect(result?.value).to.eql(map)
+      expect(result?.value).toEqual(map)
     })
 
     it('map (json)', async () => {
@@ -146,7 +144,7 @@ describe('Memcached Client', () => {
       await client.set(key, { map, test: 'foobar' })
 
       const result = await client.getc(key)
-      expect(result?.value).to.eql({ map, test: 'foobar' })
+      expect(result?.value).toEqual({ map, test: 'foobar' })
     })
 
     it('bigint (json)', async () => {
@@ -155,7 +153,7 @@ describe('Memcached Client', () => {
       await client.set(key, { value, test: 'foobar' })
 
       const result = await client.getc(key)
-      expect(result?.value).to.eql({ value, test: 'foobar' })
+      expect(result?.value).toEqual({ value, test: 'foobar' })
     })
 
     it('date/map/set/bigint json', async () => {
@@ -172,7 +170,7 @@ describe('Memcached Client', () => {
       await client.set(key, { map, set, date, value })
 
       const result = await client.getc(key)
-      expect(result?.value).to.eql({ map, set, date, value })
+      expect(result?.value).toEqual({ map, set, date, value })
     })
   })
 
@@ -182,8 +180,8 @@ describe('Memcached Client', () => {
     it('Buffer', async () => {
       const set = await client.set(key, buffer)
       const { value, cas } = await client.getc(key) || {}
-      expect(cas).to.equal(set)
-      expect(Buffer.compare(value as any, buffer)).to.equal(0)
+      expect(cas).toStrictlyEqual(set)
+      expect(Buffer.compare(value as any, buffer)).toStrictlyEqual(0)
     })
 
     const intTests = {
@@ -203,10 +201,10 @@ describe('Memcached Client', () => {
         const array = new TypedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength / 8)
         const set = await client.set(key, array)
         const { value, cas } = await client.getc(key) || {} as any
-        expect(cas).to.equal(set)
-        expect(value).to.be.instanceOf(TypedArray)
-        expect(value.length).to.equal(array.length).to.be.greaterThan(0)
-        expect([ ...value ]).to.have.members([ ...array ]).to.have.length.greaterThan(0)
+        expect(cas).toStrictlyEqual(set)
+        expect(value).toBeInstanceOf(TypedArray)
+        expect(value.length).toStrictlyEqual(array.length).toBeGreaterThan(0)
+        expect([ ...value ]).toEqual([ ...array ])
       })
     }
 
@@ -224,10 +222,10 @@ describe('Memcached Client', () => {
 
         const set = await client.set(key, array)
         const { value, cas } = await client.getc(key) || {} as any
-        expect(cas).to.equal(set)
-        expect(value).to.be.instanceOf(TypedArray)
-        expect(value.length).to.equal(array.length).to.be.greaterThan(0)
-        expect([ ...value ]).to.have.members([ ...array ]).to.have.length.greaterThan(0)
+        expect(cas).toStrictlyEqual(set)
+        expect(value).toBeInstanceOf(TypedArray)
+        expect(value.length).toStrictlyEqual(array.length).toBeGreaterThan(0)
+        expect([ ...value ]).toEqual([ ...array ])
       })
     }
   })
@@ -237,35 +235,35 @@ describe('Memcached Client', () => {
   describe('add/replace', () => {
     it('should add a value when none exists', async () => {
       const cas = await client.add(key, 'Foo, Bar and Baz')
-      expect(cas).to.be.a('bigint')
+      expect(cas).toBeA('bigint')
 
       const get = await client.getc(key)
-      expect(get).to.eql({
+      expect(get).toEqual({
         value: 'Foo, Bar and Baz',
         cas,
       })
 
-      expect(await client.add(key, 'Hello, world!')).to.be.undefined
+      expect(await client.add(key, 'Hello, world!')).toBeUndefined()
 
-      expect(await client.getc(key)).to.eql(get)
+      expect(await client.getc(key)).toEqual(get)
     })
 
     it('should replace a value when none exists', async () => {
-      expect(await client.replace(key, 'Foo, Bar and Baz')).to.be.undefined
-      expect(await client.getc(key)).to.be.undefined
+      expect(await client.replace(key, 'Foo, Bar and Baz')).toBeUndefined()
+      expect(await client.getc(key)).toBeUndefined()
 
       const cas = await client.set(key, 'Foo, Bar and Baz')
-      expect(cas).to.be.a('bigint')
+      expect(cas).toBeA('bigint')
 
-      expect(await client.getc(key)).to.eql({
+      expect(await client.getc(key)).toEqual({
         value: 'Foo, Bar and Baz',
         cas,
       })
 
       const replace = await client.replace(key, 'Hello, world!')
-      expect(replace).to.be.a('bigint')
+      expect(replace).toBeA('bigint')
 
-      expect(await client.getc(key)).to.eql({
+      expect(await client.getc(key)).toEqual({
         value: 'Hello, world!',
         cas: replace,
       })
@@ -276,37 +274,37 @@ describe('Memcached Client', () => {
 
   describe('append/prepend', () => {
     it('should append a value', async () => {
-      expect(await client.append(key, 'Hello, world!')).to.be.false
+      expect(await client.append(key, 'Hello, world!')).toBeFalse()
 
       const cas = await client.set(key, 'Foo, Bar')
-      expect(cas).to.be.a('bigint')
+      expect(cas).toBeA('bigint')
 
-      expect(await client.getc(key)).to.eql({
+      expect(await client.getc(key)).toEqual({
         value: 'Foo, Bar',
         cas,
       })
 
-      expect(await client.append(key, ' and Baz')).to.be.true
+      expect(await client.append(key, ' and Baz')).toBeTrue()
 
       const get = await client.getc(key)
-      expect(get!.value).to.eql('Foo, Bar and Baz')
+      expect(get!.value).toEqual('Foo, Bar and Baz')
     })
 
     it('should prepend a value', async () => {
-      expect(await client.prepend(key, 'Hello, world!')).to.be.false
+      expect(await client.prepend(key, 'Hello, world!')).toBeFalse()
 
       const cas = await client.set(key, 'Bar and Baz')
-      expect(cas).to.be.a('bigint')
+      expect(cas).toBeA('bigint')
 
-      expect(await client.getc(key)).to.eql({
+      expect(await client.getc(key)).toEqual({
         value: 'Bar and Baz',
         cas,
       })
 
-      expect(await client.prepend(key, 'Foo, ')).to.be.true
+      expect(await client.prepend(key, 'Foo, ')).toBeTrue()
 
       const get = await client.getc(key)
-      expect(get!.value).to.eql('Foo, Bar and Baz')
+      expect(get!.value).toEqual('Foo, Bar and Baz')
     })
   })
 
@@ -316,22 +314,22 @@ describe('Memcached Client', () => {
     it('should increment a value', async () => {
       const { cas, value } = await client.increment(key, 1, { initial: 123 }) as any
 
-      expect(cas).to.be.a('bigint')
-      expect(value).to.be.a('bigint')
-      expect(value).to.equal(123n)
+      expect(cas).toBeA('bigint')
+      expect(value).toBeA('bigint')
+      expect(value).toStrictlyEqual(123n)
 
-      expect(await client.getc(key)).to.eql({
+      expect(await client.getc(key)).toEqual({
         value: 123n,
         cas,
       })
 
       const { cas: cas2 } = await client.increment(key, 1) as any
-      expect(await client.getc(key)).to.eql({
+      expect(await client.getc(key)).toEqual({
         value: 124n,
         cas: cas2,
       })
 
-      expect(await client.increment(key, 1, { initial: 999, cas: cas2 + 10n })).to.be.undefined
+      expect(await client.increment(key, 1, { initial: 999, cas: cas2 + 10n })).toBeUndefined()
     })
 
     it('should increment a value modified by a race condition', async () => {
@@ -340,34 +338,34 @@ describe('Memcached Client', () => {
 
       const { cas, value } = await promise || {}
 
-      expect(cas).to.be.a('bigint')
-      expect(value).to.be.a('bigint')
-      expect(value).to.equal(123n)
+      expect(cas).toBeA('bigint')
+      expect(value).toBeA('bigint')
+      expect(value).toStrictlyEqual(123n)
 
       const result = await client.getc(key)
-      expect(result?.value).to.equal('foobar')
-      expect(result?.cas).to.not.equal(cas)
+      expect(result?.value).toStrictlyEqual('foobar')
+      expect(result?.cas).not.toEqual(cas)
     })
 
     it('should decrement a value', async () => {
       const { cas, value } = await client.decrement(key, 1, { initial: 123 }) as any
-      expect(cas).to.be.a('bigint')
+      expect(cas).toBeA('bigint')
 
-      expect(value).to.be.a('bigint')
-      expect(value).to.equal(123n)
+      expect(value).toBeA('bigint')
+      expect(value).toStrictlyEqual(123n)
 
-      expect(await client.getc(key)).to.eql({
+      expect(await client.getc(key)).toEqual({
         value: 123n,
         cas,
       })
 
       const { cas: cas2 } = await client.decrement(key, 1) as any
-      expect(await client.getc(key)).to.eql({
+      expect(await client.getc(key)).toEqual({
         value: 122n,
         cas: cas2,
       })
 
-      expect(await client.decrement(key, 1, { initial: 999, cas: cas2 + 10n })).to.be.undefined
+      expect(await client.decrement(key, 1, { initial: 999, cas: cas2 + 10n })).toBeUndefined()
     })
 
     it('should decrement a value modified by a race condition', async () => {
@@ -376,13 +374,13 @@ describe('Memcached Client', () => {
 
       const { cas, value } = await promise
 
-      expect(cas).to.be.a('bigint')
-      expect(value).to.be.a('bigint')
-      expect(value).to.equal(123n)
+      expect(cas).toBeA('bigint')
+      expect(value).toBeA('bigint')
+      expect(value).toStrictlyEqual(123n)
 
       const result = await client.getc(key)
-      expect(result?.value).to.equal('foobar')
-      expect(result?.cas).to.not.equal(cas)
+      expect(result?.value).toStrictlyEqual('foobar')
+      expect(result?.cas).not.toEqual(cas)
     })
   })
 
@@ -417,31 +415,31 @@ describe('Memcached Client', () => {
     } as Adapter)
 
     it('touch', () => {
-      expect(client.touch('key', 123)).to.eql([ 'touch', 'key', 123 ])
+      expect(client.touch('key', 123)).toEqual([ 'touch', 'key', 123 ])
     })
 
     it('delete', () => {
-      expect(client.delete('key', { cas: 123n })).to.eql([ 'delete', 'key', { cas: 123n } ])
+      expect(client.delete('key', { cas: 123n })).toEqual([ 'delete', 'key', { cas: 123n } ])
     })
 
     it('flush', () => {
-      expect(client.flush(123)).to.eql([ 'flush', 123 ])
+      expect(client.flush(123)).toEqual([ 'flush', 123 ])
     })
 
     it('noop', () => {
-      expect(client.noop()).to.eql([ 'noop' ])
+      expect(client.noop()).toEqual([ 'noop' ])
     })
 
     it('quit', () => {
-      expect(client.quit()).to.eql([ 'quit' ])
+      expect(client.quit()).toEqual([ 'quit' ])
     })
 
     it('version', () => {
-      expect(client.version()).to.eql([ 'version' ])
+      expect(client.version()).toEqual([ 'version' ])
     })
 
     it('stats', () => {
-      expect(client.stats()).to.eql([ 'stats' ])
+      expect(client.stats()).toEqual([ 'stats' ])
     })
   })
 
@@ -451,68 +449,68 @@ describe('Memcached Client', () => {
     const prefixed = client.withPrefix('foo:')
 
     it('should expose the prefix', () => {
-      expect(prefixed.prefix).to.equal('foo:')
+      expect(prefixed.prefix).toStrictlyEqual('foo:')
     })
 
     it('get/set (1)', async () => {
       await prefixed.set(key, 'foobar')
-      expect((await client.getc('foo:' + key))?.value).to.equal('foobar')
+      expect((await client.getc('foo:' + key))?.value).toStrictlyEqual('foobar')
     })
 
     it('get/set (2)', async () => {
       await client.set('foo:' + key, 'foobar')
-      expect((await prefixed.getc(key))?.value).to.equal('foobar')
+      expect((await prefixed.getc(key))?.value).toStrictlyEqual('foobar')
     })
 
     it('add', async () => {
       await prefixed.add(key, 'foobar')
-      expect((await client.getc('foo:' + key))?.value).to.equal('foobar')
+      expect((await client.getc('foo:' + key))?.value).toStrictlyEqual('foobar')
     })
 
     it('replace', async () => {
       await client.set('foo:' + key, 'wrong')
       await prefixed.replace(key, 'foobar')
-      expect((await client.getc('foo:' + key))?.value).to.equal('foobar')
+      expect((await client.getc('foo:' + key))?.value).toStrictlyEqual('foobar')
     })
 
     it('append', async () => {
       await client.set('foo:' + key, 'foo')
       await prefixed.append(key, 'bar')
-      expect((await client.getc('foo:' + key))?.value).to.equal('foobar')
+      expect((await client.getc('foo:' + key))?.value).toStrictlyEqual('foobar')
     })
 
     it('prepend', async () => {
       await client.set('foo:' + key, 'bar')
       await prefixed.prepend(key, 'foo')
-      expect((await client.getc('foo:' + key))?.value).to.equal('foobar')
+      expect((await client.getc('foo:' + key))?.value).toStrictlyEqual('foobar')
     })
 
     it('increment', async () => {
       await prefixed.increment(key, 10, { initial: 50 })
-      expect((await client.getc('foo:' + key))?.value).to.equal(50n)
+      expect((await client.getc('foo:' + key))?.value).toStrictlyEqual(50n)
     })
 
     it('decrement', async () => {
       await prefixed.decrement(key, 10, { initial: 50 })
-      expect((await client.getc('foo:' + key))?.value).to.equal(50n)
+      expect((await client.getc('foo:' + key))?.value).toStrictlyEqual(50n)
     })
 
     it('touch', async () => {
       await client.set('foo:' + key, 'foobar')
 
-      expect((await prefixed.touch(key, 1))).to.be.true
-      expect((await client.getc('foo:' + key))?.value).to.equal('foobar')
+      expect((await prefixed.touch(key, 1))).toBeTrue()
+      expect((await client.getc('foo:' + key))?.value).toStrictlyEqual('foobar')
 
       await new Promise((resolve) => setTimeout(resolve, 2000))
-      expect(await client.getc('foo:' + key)).to.be.undefined
+      expect(await client.getc('foo:' + key)).toBeUndefined()
     }, 10000)
 
     it('delete', async () => {
       await client.set('foo:' + key, 'foobar')
 
-      expect((await client.getc('foo:' + key))?.value).to.equal('foobar')
-      expect(await prefixed.delete(key)).to.be.true
-      expect((await client.getc('foo:' + key))?.value).to.be.undefined
+      expect((await client.getc('foo:' + key))?.value).toStrictlyEqual('foobar')
+      expect(await prefixed.delete(key)).toBeTrue()
+      expect((await client.getc('foo:' + key))?.value).toBeUndefined()
     })
   })
 })

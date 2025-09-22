@@ -2,15 +2,10 @@ import { spawn } from 'node:child_process'
 import { createInterface } from 'node:readline'
 
 import { log } from '@plugjs/plug'
-import * as chai from 'chai'
-import chap from 'chai-as-promised'
-import chae from 'chai-exclude'
 
 import type { ChildProcess } from 'node:child_process'
 
 let child: ChildProcess | undefined = undefined
-
-chai.use(chap).use(chae)
 
 beforeAll(() => {
   // do not spawn local "memcached" on GitHub
