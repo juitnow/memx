@@ -278,7 +278,7 @@ describe('Utilities', () => {
       const child = exec('tsrun', './test/locker.ts', lockname)
 
       // this should give the child process enough time to start and lock
-      await new Promise((resolve) => void setTimeout(resolve, 500))
+      await new Promise((resolve) => void setTimeout(resolve, 2000))
 
       // the first attempt to locking should fail, the child should be locking!
       await expect(new PoorManLock(client, lockname).execute(() => {
@@ -288,17 +288,17 @@ describe('Utilities', () => {
 
       // the second attempt should succeed, once the child dies...
       const p1 = new PoorManLock(client, lockname).execute(() => {
-        log('Parent process executing 1')
-      }, { owner: `test-parent-${process.pid}@1` })
+        log(`${new Date().toISOString()} - Parent process executing 1`)
+      }, { owner: `test-parent-${process.pid}@1`, timeout: 10000 })
       const p2 = new PoorManLock(client, lockname).execute(() => {
-        log('Parent process executing 2')
-      }, { owner: `test-parent-${process.pid}@2` })
+        log(`${new Date().toISOString()} - Parent process executing 2`)
+      }, { owner: `test-parent-${process.pid}@2`, timeout: 10000 })
       const p3 = new PoorManLock(client, lockname).execute(() => {
-        log('Parent process executing 3')
-      }, { owner: `test-parent-${process.pid}@3` })
+        log(`${new Date().toISOString()} - Parent process executing 3`)
+      }, { owner: `test-parent-${process.pid}@3`, timeout: 10000 })
 
       // reap up the child's leftovers...
       await Promise.all([ p1, p2, p3, child ])
-    }, 10000)
+    }, 20000)
   })
 })

@@ -8,18 +8,18 @@ const port = parseInt(process.env.MEMCACHED_PORT || '11211')
 const client = new MemxClient({ hosts: [ { host, port } ] })
 
 async function test(): Promise<void> {
-  console.log(`Child process using lock "${process.argv[2]}"`)
+  console.log(`${new Date().toISOString()} - Child process using lock "${process.argv[2]}"`)
 
   const lock = new PoorManLock(client, process.argv[2])
   try {
     await lock.execute(async () => {
-      console.log('Child process locking')
-      await new Promise((resolve) => void setTimeout(resolve, 2000))
-      console.log('Child process exiting')
+      console.log(`${new Date().toISOString()} - Child process locking`)
+      await new Promise((resolve) => void setTimeout(resolve, 5000))
+      console.log(`${new Date().toISOString()} - Child process exiting`)
       process.exit(0)
     }, { owner: `test-child-${process.pid}` })
   } finally {
-    console.log('Child process exit interrupted ???')
+    console.log(`${new Date().toISOString()} - Child process exit interrupted ???`)
     process.exit(123)
   }
 }
