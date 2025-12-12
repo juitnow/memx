@@ -8,25 +8,30 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: Release Package
+
     services:
       memcached:
         image: memcached:latest
         ports:
           - 11211:11211/tcp
+
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.git_token || github.token }}
+          fetch-depth: 0
+
       - name: Setup NodeJS
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 22.x
           registry-url: https://registry.npmjs.org
+          node-version: 24
+
       - name: Build Package
         run: |
           npm clean-install --ignore-scripts
           npm run build
+
       - name: Publish Package
         run: |
           VERSION="$(node -p 'require("./package.json").version')"
@@ -49,5 +54,26 @@ jobs:
 
           npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
           GH_TOKEN: ${{ github.token }}
+
+      - name: Send Email Notification
+        if: ${{ !success() }}
+        uses: dawidd6/action-send-mail@v6
+        with:
+          server_address: ${{ secrets.EMAIL_SERVER }}
+          server_port: ${{ secrets.EMAIL_PORT || '465' }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          secure: true
+          convert_markdown: true
+          from: GitHub Actions <developers+github@juit.com>
+          to: Juit Developers <developers+github@juit.com>
+          subject: "[${{ job.status }}] ${{ github.workflow }} in ${{ github.repository }}"
+          body: |
+            The GitHub Action "${{ github.workflow }}" in repository "${{ github.repository }}" ${{ job.status == 'cancelled' && 'was canceled' || 'has failed' }}.
+
+            Build logs are available at ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          html_body: |
+            The GitHub Action **`${{ github.workflow }}`** in repository **`${{ github.repository }}`** ${{ job.status == 'cancelled' && 'was **canceled**' || 'has **failed**' }}.
+
+            Build logs are available _[here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})_.
