@@ -1,6 +1,6 @@
 {
   "name": "memx",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "Simple and fast memcached client",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -36,7 +36,7 @@
     "url": "git+ssh://git@github.com/juitnow/memx.git"
   },
   "devDependencies": {
-    "@plugjs/build": "^0.6.77",
+    "@plugjs/build": "^0.6.79",
     "@types/memjs": "^1.3.3",
     "memjs": "^1.3.2"
   },
