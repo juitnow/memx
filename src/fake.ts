@@ -165,8 +165,8 @@ export class FakeAdapter implements Adapter {
       const value = BigInt(entry.value.toString('utf-8')) + BigInt(delta)
       this.#set(key, Buffer.from(value.toString()), undefined, options.ttl)
       return { value, cas: this.#cas }
-    } catch (error: any) {
-      throw new TypeError(`${error.message} (status=NON_NUMERIC_VALUE, key=${key})`)
+    } catch (cause: any) {
+      throw new TypeError(`${cause.message} (status=NON_NUMERIC_VALUE, key=${key})`, { cause })
     }
   }
 
