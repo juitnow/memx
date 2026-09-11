@@ -122,12 +122,12 @@ function fromBuffer<T extends Serializable>(result: AdapterResult): ClientResult
 
 /** Create a {@link NodeJS.TypedArray} copying the contents of its source {@link Buffer} */
 function makeTypedArray<T extends NodeJS.TypedArray>(
-    constructor: TypedArrayConstructor<T>,
+    Constructor: TypedArrayConstructor<T>,
     source: Buffer,
 ): T {
   const clone = Buffer.from(source)
   const { buffer, byteOffset, byteLength } = clone
-  return new constructor(buffer, byteOffset, byteLength / constructor.BYTES_PER_ELEMENT)
+  return new Constructor(buffer, byteOffset, byteLength / Constructor.BYTES_PER_ELEMENT)
 }
 
 /* ========================================================================== */
